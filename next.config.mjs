@@ -11,9 +11,9 @@ const nextConfig = {
   },
   
   // Use a custom build directory to avoid filesystem issues
-  distDir: 'build',
+  distDir: '.next',
   
-  // Disable file tracing which may help with the permission errors
+  // Use standalone mode for Vercel deployment
   output: 'standalone',
   
   // Turn off source maps to simplify the build
