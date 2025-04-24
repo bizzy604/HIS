@@ -17,16 +17,10 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-
-interface Client {
-  id: string
-  name: string
-  email: string
-  phone: string
-  programs: string[]
-  status: "active" | "inactive"
-  lastVisit: string
-}
+import { Client } from "@/hooks/use-clients"
+import { usePrograms } from "@/hooks/use-programs"
+import { createEnrollment } from "@/hooks/use-enrollments"
+import { toast } from "@/hooks/use-toast"
 
 interface EnrollClientDialogProps {
   open: boolean
@@ -34,48 +28,63 @@ interface EnrollClientDialogProps {
   client: Client
 }
 
-const programs = [
-  "Diabetes Management",
-  "Cardiac Rehabilitation",
-  "Weight Management",
-  "Mental Health Support",
-  "Prenatal Care",
-  "Nutrition Counseling",
-  "Physical Therapy",
-  "Smoking Cessation",
-  "Hypertension Management",
-]
-
 const formSchema = z.object({
   program: z.string({
     required_error: "Please select a program.",
+  }),
+  status: z.enum(["active", "completed", "dropped"], {
+    required_error: "Please select a status.",
   }),
   notes: z.string().optional(),
 })
 
 export function EnrollClientDialog({ open, onOpenChange, client }: EnrollClientDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { programs, isLoading: isLoadingPrograms } = usePrograms()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       program: "",
+      status: "active",
       notes: "",
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true)
-    // In a real application, you would submit to your API here
-    console.log(`Enrolling ${client.name} in ${values.program}`)
-    console.log(values)
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (isLoadingPrograms || !programs.length) {
+      toast({
+        title: "Error",
+        description: "Unable to load programs. Please try again.",
+        variant: "destructive",
+      })
+      return
+    }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
-      onOpenChange(false)
+    setIsSubmitting(true)
+
+    try {
+      // Create the enrollment
+      await createEnrollment({
+        clientId: client.id,
+        programId: values.program,
+        status: values.status,
+      })
+
+      toast({
+        title: "Success",
+        description: `${client.name} has been enrolled in the program successfully.`,
+      })
+
+      // Reset form and close dialog
       form.reset()
-    }, 1000)
+      onOpenChange(false)
+    } catch (error) {
+      console.error("Error enrolling client:", error)
+      // Error handling is done in the createEnrollment function
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -83,7 +92,9 @@ export function EnrollClientDialog({ open, onOpenChange, client }: EnrollClientD
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Enroll in Program</DialogTitle>
-          <DialogDescription>Enroll {client.name} in a health program.</DialogDescription>
+          <DialogDescription>
+            Enroll {client.name} in a health program. Select a program from the list below.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -100,11 +111,43 @@ export function EnrollClientDialog({ open, onOpenChange, client }: EnrollClientD
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {programs.map((program) => (
-                        <SelectItem key={program} value={program}>
-                          {program}
+                      {isLoadingPrograms ? (
+                        <SelectItem value="loading" disabled>
+                          Loading programs...
                         </SelectItem>
-                      ))}
+                      ) : programs.length === 0 ? (
+                        <SelectItem value="none" disabled>
+                          No programs available
+                        </SelectItem>
+                      ) : (
+                        programs.map((program) => (
+                          <SelectItem key={program.id} value={program.id}>
+                            {program.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="dropped">Dropped</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -116,20 +159,24 @@ export function EnrollClientDialog({ open, onOpenChange, client }: EnrollClientD
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>Notes (Optional)</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Add any enrollment notes here..." className="resize-none" {...field} />
+                    <Textarea
+                      placeholder="Add any notes about this enrollment"
+                      className="resize-none"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Enrolling..." : "Enroll"}
+              <Button type="submit" disabled={isSubmitting || isLoadingPrograms}>
+                {isSubmitting ? "Enrolling..." : "Enroll Client"}
               </Button>
             </DialogFooter>
           </form>

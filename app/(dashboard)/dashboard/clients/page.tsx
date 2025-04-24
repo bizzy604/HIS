@@ -17,125 +17,34 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ClientsTableActions } from "@/components/clients-table-actions"
 import { ClientDialog } from "@/components/client-dialog"
-
-interface Client {
-  id: string
-  name: string
-  email: string
-  phone: string
-  programs: string[]
-  status: "active" | "inactive"
-  lastVisit: string
-}
-
-const clients: Client[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "(555) 123-4567",
-    programs: ["Diabetes Management", "Weight Management"],
-    status: "active",
-    lastVisit: "Apr 23, 2023",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    phone: "(555) 234-5678",
-    programs: ["Cardiac Rehabilitation"],
-    status: "active",
-    lastVisit: "Apr 22, 2023",
-  },
-  {
-    id: "3",
-    name: "Robert Johnson",
-    email: "robert.johnson@example.com",
-    phone: "(555) 345-6789",
-    programs: ["Mental Health Support"],
-    status: "inactive",
-    lastVisit: "Apr 15, 2023",
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    email: "emily.davis@example.com",
-    phone: "(555) 456-7890",
-    programs: ["Prenatal Care", "Nutrition Counseling"],
-    status: "active",
-    lastVisit: "Apr 20, 2023",
-  },
-  {
-    id: "5",
-    name: "Michael Brown",
-    email: "michael.brown@example.com",
-    phone: "(555) 567-8901",
-    programs: ["Diabetes Management"],
-    status: "active",
-    lastVisit: "Apr 19, 2023",
-  },
-  {
-    id: "6",
-    name: "Sarah Wilson",
-    email: "sarah.wilson@example.com",
-    phone: "(555) 678-9012",
-    programs: ["Weight Management"],
-    status: "inactive",
-    lastVisit: "Apr 10, 2023",
-  },
-  {
-    id: "7",
-    name: "David Taylor",
-    email: "david.taylor@example.com",
-    phone: "(555) 789-0123",
-    programs: ["Cardiac Rehabilitation", "Smoking Cessation"],
-    status: "active",
-    lastVisit: "Apr 18, 2023",
-  },
-  {
-    id: "8",
-    name: "Jennifer Martinez",
-    email: "jennifer.martinez@example.com",
-    phone: "(555) 890-1234",
-    programs: ["Mental Health Support"],
-    status: "active",
-    lastVisit: "Apr 17, 2023",
-  },
-  {
-    id: "9",
-    name: "Christopher Anderson",
-    email: "christopher.anderson@example.com",
-    phone: "(555) 901-2345",
-    programs: ["Physical Therapy"],
-    status: "inactive",
-    lastVisit: "Apr 5, 2023",
-  },
-  {
-    id: "10",
-    name: "Lisa Thomas",
-    email: "lisa.thomas@example.com",
-    phone: "(555) 012-3456",
-    programs: ["Prenatal Care"],
-    status: "active",
-    lastVisit: "Apr 16, 2023",
-  },
-]
+import { useClients } from "@/hooks/use-clients"
+import { Skeleton } from "@/components/ui/skeleton"
+import { format } from "date-fns"
 
 export default function ClientsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [isAddClientOpen, setIsAddClientOpen] = useState(false)
+  
+  // Fetch clients using our API hook
+  const { clients, isLoading, isError } = useClients()
 
+  // Apply filters to the fetched clients
   const filteredClients = clients.filter((client) => {
     const matchesSearch =
       client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.phone.includes(searchQuery)
+      (client.email && client.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (client.phone && client.phone.includes(searchQuery))
 
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(client.status)
 
     return matchesSearch && matchesStatus
   })
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Never';
+    return format(new Date(dateString), 'MMM dd, yyyy');
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -230,19 +139,45 @@ export default function ClientsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredClients.length === 0 ? (
+                  {isLoading ? (
+                    // Show loading skeleton
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <TableRow key={`loading-${index}`}>
+                        <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-[180px]" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                        <TableCell><Skeleton className="h-8 w-[80px]" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : isError ? (
+                    // Show error state
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                        Error loading clients. Please try again.
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredClients.length === 0 ? (
+                    // Show empty state
                     <TableRow>
                       <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                         No clients found.
                       </TableCell>
                     </TableRow>
                   ) : (
+                    // Show client data
                     filteredClients.map((client) => (
                       <TableRow key={client.id}>
                         <TableCell className="font-medium">{client.name}</TableCell>
-                        <TableCell>{client.email}</TableCell>
-                        <TableCell>{client.phone}</TableCell>
-                        <TableCell>{client.programs.length > 0 ? client.programs.join(", ") : "None"}</TableCell>
+                        <TableCell>{client.email || '-'}</TableCell>
+                        <TableCell>{client.phone || '-'}</TableCell>
+                        <TableCell>
+                          {client.enrollments && client.enrollments.length > 0 
+                            ? client.enrollments.map(e => e.program.name).join(", ") 
+                            : "None"}
+                        </TableCell>
                         <TableCell>
                           <span
                             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -254,7 +189,7 @@ export default function ClientsPage() {
                             {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
                           </span>
                         </TableCell>
-                        <TableCell>{client.lastVisit}</TableCell>
+                        <TableCell>{formatDate(client.lastVisit)}</TableCell>
                         <TableCell>
                           <ClientsTableActions client={client} />
                         </TableCell>

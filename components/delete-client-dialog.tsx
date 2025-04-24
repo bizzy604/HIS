@@ -12,16 +12,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-
-interface Client {
-  id: string
-  name: string
-  email: string
-  phone: string
-  programs: string[]
-  status: "active" | "inactive"
-  lastVisit: string
-}
+import { Client, deleteClient } from "@/hooks/use-clients"
+import { toast } from "@/hooks/use-toast"
 
 interface DeleteClientDialogProps {
   open: boolean
@@ -32,16 +24,25 @@ interface DeleteClientDialogProps {
 export function DeleteClientDialog({ open, onOpenChange, client }: DeleteClientDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setIsDeleting(true)
-    // In a real application, you would delete from your API here
-    console.log(`Deleting client: ${client.id}`)
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsDeleting(false)
-      onOpenChange(false)
-    }, 1000)
+    
+    try {
+      // Call the API to delete the client
+      await deleteClient(client.id);
+      
+      toast({
+        title: "Success",
+        description: "Client has been deleted successfully",
+      });
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      // Error handling is done in the deleteClient function
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   return (
@@ -55,7 +56,7 @@ export function DeleteClientDialog({ open, onOpenChange, client }: DeleteClientD
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
           <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
             {isDeleting ? "Deleting..." : "Delete"}
           </Button>

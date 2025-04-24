@@ -15,16 +15,7 @@ import {
 import { ClientDialog } from "@/components/client-dialog"
 import { DeleteClientDialog } from "@/components/delete-client-dialog"
 import { EnrollClientDialog } from "@/components/enroll-client-dialog"
-
-interface Client {
-  id: string
-  name: string
-  email: string
-  phone: string
-  programs: string[]
-  status: "active" | "inactive"
-  lastVisit: string
-}
+import { Client } from "@/hooks/use-clients"
 
 interface ClientsTableActionsProps {
   client: Client
@@ -49,25 +40,23 @@ export function ClientsTableActions({ client }: ClientsTableActionsProps) {
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
             <Edit className="mr-2 h-4 w-4" />
-            Edit Client
+            Edit
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setIsEnrollOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Enroll in Program
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setIsDeleteOpen(true)} className="text-red-600 focus:text-red-600">
+          <DropdownMenuItem onClick={() => setIsDeleteOpen(true)} className="text-red-600">
             <Trash className="mr-2 h-4 w-4" />
-            Delete Client
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ClientDialog open={isEditOpen} onOpenChange={setIsEditOpen} mode="edit" client={client} />
-
-      <DeleteClientDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen} client={client} />
-
-      <EnrollClientDialog open={isEnrollOpen} onOpenChange={setIsEnrollOpen} client={client} />
+      <ClientDialog client={client} open={isEditOpen} onOpenChange={setIsEditOpen} mode="edit" />
+      <DeleteClientDialog client={client} open={isDeleteOpen} onOpenChange={setIsDeleteOpen} />
+      <EnrollClientDialog client={client} open={isEnrollOpen} onOpenChange={setIsEnrollOpen} />
     </>
   )
 }

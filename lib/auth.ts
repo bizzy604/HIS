@@ -1,38 +1,67 @@
-import { getAuth } from "@clerk/nextjs/server";
-import { currentUser } from "@clerk/nextjs/app-router";
 import { prisma } from "./db";
+import { currentUser } from "@clerk/nextjs/server";
 
-export async function getCurrentDoctor() {
-  const { userId } = getAuth();
-  
-  if (!userId) {
-    return null;
-  }
-  
-  const user = await currentUser();
-  if (!user) {
-    return null;
-  }
-  
-  // Find or create doctor record for the authenticated user
-  let doctor = await prisma.doctor.findUnique({
-    where: {
-      clerkId: userId
+// Function to get the current user for API routes and tests
+export async function getCurrentUser() {
+  try {
+    // For API routes, get the authenticated user
+    const user = await currentUser();
+    
+    if (!user) {
+      return null;
     }
-  });
-  
-  if (!doctor) {
-    // Create new doctor record if not exists
-    doctor = await prisma.doctor.create({
-      data: {
-        clerkId: userId,
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-        email: user.emailAddresses[0]?.emailAddress || ''
+    
+    // Find or create doctor record for the authenticated user
+    const doctor = await prisma.doctor.findUnique({
+      where: {
+        clerkId: user.id
       }
     });
+    
+    return doctor ? { id: doctor.id } : null;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
   }
-  
-  return doctor;
+}
+
+// Use this for API routes and middleware
+export async function getCurrentDoctor() {
+  try {
+    // For API routes, get the authenticated user
+    const user = await currentUser();
+    
+    if (!user) {
+      return null;
+    }
+    
+    // Try to get user profile info
+    let userEmail = user.emailAddresses[0]?.emailAddress || "unknown@example.com";
+    let userName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "New Doctor";
+    
+    // Find or create doctor record for the authenticated user
+    let doctor = await prisma.doctor.findUnique({
+      where: {
+        clerkId: user.id
+      }
+    });
+    
+    if (!doctor) {
+      // Create new doctor record if not exists
+      doctor = await prisma.doctor.create({
+        data: {
+          clerkId: user.id,
+          name: userName,
+          email: userEmail
+        }
+      });
+    }
+    
+    return doctor;
+  } catch (error) {
+    console.error("Error getting current doctor:", error);
+    return null;
+  }
 }
 
 // Helper to check if the current user can access a specific client

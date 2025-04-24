@@ -18,22 +18,31 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Program, createProgram, updateProgram } from "@/hooks/use-programs"
+import { toast } from "@/hooks/use-toast"
+import { format } from "date-fns"
 
-interface Program {
-  id: string
-  name: string
-  description: string
-  enrolledClients: number
-  status: "active" | "inactive"
-  startDate: string
-  endDate: string
+// Extended program type to include formatted dates and enrollment count
+interface ExtendedProgram extends Program {
+  startDateFormatted?: string;
+  endDateFormatted?: string;
+  enrolledClients?: number;
 }
 
 interface ProgramDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   mode: "add" | "edit"
-  program?: Program
+  program?: ExtendedProgram
+}
+
+// Program form data structure
+export interface ProgramData {
+  name: string
+  description: string
+  status: "active" | "inactive"
+  startDate: string
+  endDate: string | null
 }
 
 const formSchema = z.object({
@@ -47,45 +56,86 @@ const formSchema = z.object({
   startDate: z.string().min(1, {
     message: "Start date is required.",
   }),
-  endDate: z.string().min(1, {
-    message: "End date is required.",
-  }),
+  // End date is optional
+  endDate: z.string().optional(),
 })
+
+type FormValues = z.infer<typeof formSchema>
 
 export function ProgramDialog({ open, onOpenChange, mode, program }: ProgramDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Format dates for form inputs (YYYY-MM-DD)
+  const formatDateForInput = (dateString: string | null | undefined) => {
+    if (!dateString) return ""
+    try {
+      const date = new Date(dateString)
+      return format(date, "yyyy-MM-dd")
+    } catch (error) {
+      console.error("Invalid date:", dateString)
+      return ""
+    }
+  }
+  
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: program?.name || "",
       description: program?.description || "",
-      status: program?.status || "active",
-      startDate: program?.startDate || "",
-      endDate: program?.endDate || "",
+      status: (program?.status as "active" | "inactive") || "active",
+      startDate: formatDateForInput(program?.startDate) || "",
+      endDate: formatDateForInput(program?.endDate) || "",
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: FormValues) {
     setIsSubmitting(true)
-    // In a real application, you would submit to your API here
-    console.log(values)
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
-      onOpenChange(false)
+    
+    try {
+      const programData: ProgramData = {
+        name: values.name,
+        description: values.description,
+        status: values.status,
+        startDate: values.startDate,
+        endDate: values.endDate || null,
+      }
+      
+      if (mode === "add") {
+        // Create new program
+        await createProgram(programData)
+        toast({
+          title: "Success",
+          description: "Program has been created successfully",
+        })
+      } else if (mode === "edit" && program) {
+        // Update existing program
+        await updateProgram(program.id, programData)
+        toast({
+          title: "Success",
+          description: "Program has been updated successfully",
+        })
+      }
+      
+      // Reset form and close dialog
       form.reset()
-    }, 1000)
+      onOpenChange(false)
+    } catch (error) {
+      console.error("Error submitting program form:", error)
+      // Error handling is done in the API functions
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{mode === "add" ? "Add New Program" : "Edit Program"}</DialogTitle>
+          <DialogTitle>{mode === "add" ? "Add Program" : "Edit Program"}</DialogTitle>
           <DialogDescription>
-            {mode === "add" ? "Create a new health program for your clients." : "Update the program's information."}
+            {mode === "add"
+              ? "Add a new health program to your practice."
+              : "Edit program details. Fill out the form below."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -95,9 +145,9 @@ export function ProgramDialog({ open, onOpenChange, mode, program }: ProgramDial
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Program Name</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Diabetes Management" {...field} />
+                    <Input placeholder="Enter program name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -111,7 +161,7 @@ export function ProgramDialog({ open, onOpenChange, mode, program }: ProgramDial
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Comprehensive program for managing diabetes"
+                      placeholder="Enter program description"
                       className="resize-none"
                       {...field}
                     />
@@ -120,34 +170,6 @@ export function ProgramDialog({ open, onOpenChange, mode, program }: ProgramDial
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Jan 15, 2023" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Date</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Dec 31, 2023" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
             <FormField
               control={form.control}
               name="status"
@@ -157,7 +179,7 @@ export function ProgramDialog({ open, onOpenChange, mode, program }: ProgramDial
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
+                        <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -169,12 +191,43 @@ export function ProgramDialog({ open, onOpenChange, mode, program }: ProgramDial
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="startDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="endDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>End Date (Optional)</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save"}
+                {isSubmitting ? "Saving..." : mode === "add" ? "Add Program" : "Save Changes"}
               </Button>
             </DialogFooter>
           </form>

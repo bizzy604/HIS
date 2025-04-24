@@ -17,16 +17,8 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-interface Client {
-  id: string
-  name: string
-  email: string
-  phone: string
-  programs: string[]
-  status: "active" | "inactive"
-  lastVisit: string
-}
+import { Client, ClientData, createClient, updateClient } from "@/hooks/use-clients"
+import { toast } from "@/hooks/use-toast"
 
 interface ClientDialogProps {
   open: boolean
@@ -35,52 +27,80 @@ interface ClientDialogProps {
   client?: Client
 }
 
+// Define the form schema
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
   }),
   email: z.string().email({
     message: "Please enter a valid email address.",
-  }),
-  phone: z.string().min(10, {
-    message: "Please enter a valid phone number.",
-  }),
+  }).optional().or(z.literal('')),
+  phone: z.string().optional().or(z.literal('')),
   status: z.enum(["active", "inactive"]),
 })
 
+type FormValues = z.infer<typeof formSchema>
+
 export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const form = useForm<z.infer<typeof formSchema>>({
+  
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: client?.name || "",
       email: client?.email || "",
       phone: client?.phone || "",
-      status: client?.status || "active",
+      status: (client?.status as "active" | "inactive") || "active",
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: FormValues) {
     setIsSubmitting(true)
-    // In a real application, you would submit to your API here
-    console.log(values)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
-      onOpenChange(false)
-      form.reset()
-    }, 1000)
+    try {
+      const clientData: ClientData = {
+        name: values.name,
+        email: values.email || "",
+        phone: values.phone || "",
+        status: values.status
+      };
+
+      if (mode === "add") {
+        // Create new client
+        await createClient(clientData);
+        toast({
+          title: "Success",
+          description: "Client has been created successfully",
+        });
+      } else if (mode === "edit" && client) {
+        // Update existing client
+        await updateClient(client.id, clientData);
+        toast({
+          title: "Success",
+          description: "Client has been updated successfully",
+        });
+      }
+
+      // Reset form and close dialog
+      form.reset();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error submitting client form:", error);
+      // Error handling is done in the API functions
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{mode === "add" ? "Add New Client" : "Edit Client"}</DialogTitle>
+          <DialogTitle>{mode === "add" ? "Add Client" : "Edit Client"}</DialogTitle>
           <DialogDescription>
-            {mode === "add" ? "Add a new client to your practice." : "Update the client's information."}
+            {mode === "add"
+              ? "Add a new client to your practice. Fill out the form below."
+              : "Edit client details. Fill out the form below."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -90,9 +110,9 @@ export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogP
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="Enter client name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -105,7 +125,7 @@ export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogP
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="john.doe@example.com" {...field} />
+                    <Input placeholder="Enter client email" type="email" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -116,9 +136,9 @@ export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogP
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>Phone</FormLabel>
                   <FormControl>
-                    <Input placeholder="(555) 123-4567" {...field} />
+                    <Input placeholder="Enter client phone" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -133,7 +153,7 @@ export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogP
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
+                        <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -146,11 +166,16 @@ export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogP
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save"}
+                {isSubmitting ? "Saving..." : mode === "add" ? "Add Client" : "Save Changes"}
               </Button>
             </DialogFooter>
           </form>

@@ -17,110 +17,31 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ProgramsTableActions } from "@/components/programs-table-actions"
 import { ProgramDialog } from "@/components/program-dialog"
-
-interface Program {
-  id: string
-  name: string
-  description: string
-  enrolledClients: number
-  status: "active" | "inactive"
-  startDate: string
-  endDate: string
-}
-
-const programs: Program[] = [
-  {
-    id: "1",
-    name: "Diabetes Management",
-    description: "Comprehensive program for managing diabetes",
-    enrolledClients: 124,
-    status: "active",
-    startDate: "Jan 15, 2023",
-    endDate: "Dec 31, 2023",
-  },
-  {
-    id: "2",
-    name: "Cardiac Rehabilitation",
-    description: "Recovery program for heart patients",
-    enrolledClients: 98,
-    status: "active",
-    startDate: "Feb 1, 2023",
-    endDate: "Jan 31, 2024",
-  },
-  {
-    id: "3",
-    name: "Weight Management",
-    description: "Program for healthy weight loss and maintenance",
-    enrolledClients: 87,
-    status: "active",
-    startDate: "Mar 10, 2023",
-    endDate: "Mar 10, 2024",
-  },
-  {
-    id: "4",
-    name: "Mental Health Support",
-    description: "Support program for mental health and wellness",
-    enrolledClients: 76,
-    status: "active",
-    startDate: "Apr 5, 2023",
-    endDate: "Apr 5, 2024",
-  },
-  {
-    id: "5",
-    name: "Prenatal Care",
-    description: "Care program for expectant mothers",
-    enrolledClients: 65,
-    status: "active",
-    startDate: "May 1, 2023",
-    endDate: "May 1, 2024",
-  },
-  {
-    id: "6",
-    name: "Nutrition Counseling",
-    description: "Guidance for healthy eating habits",
-    enrolledClients: 54,
-    status: "active",
-    startDate: "Jun 15, 2023",
-    endDate: "Jun 15, 2024",
-  },
-  {
-    id: "7",
-    name: "Physical Therapy",
-    description: "Rehabilitation program for physical injuries",
-    enrolledClients: 43,
-    status: "active",
-    startDate: "Jul 1, 2023",
-    endDate: "Jul 1, 2024",
-  },
-  {
-    id: "8",
-    name: "Smoking Cessation",
-    description: "Program to help quit smoking",
-    enrolledClients: 32,
-    status: "inactive",
-    startDate: "Aug 10, 2023",
-    endDate: "Feb 10, 2024",
-  },
-  {
-    id: "9",
-    name: "Hypertension Management",
-    description: "Program for managing high blood pressure",
-    enrolledClients: 21,
-    status: "active",
-    startDate: "Sep 5, 2023",
-    endDate: "Sep 5, 2024",
-  },
-]
+import { usePrograms } from "@/hooks/use-programs"
+import { Skeleton } from "@/components/ui/skeleton"
+import { AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { format } from "date-fns"
 
 export default function ProgramsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [isAddProgramOpen, setIsAddProgramOpen] = useState(false)
+  
+  const { programs, isLoading, isError } = usePrograms()
 
-  const filteredPrograms = programs.filter((program) => {
+  // Format dates and count enrollments
+  const formattedPrograms = programs.map(program => ({
+    ...program,
+    startDateFormatted: format(new Date(program.startDate), 'MMM d, yyyy'),
+    endDateFormatted: program.endDate ? format(new Date(program.endDate), 'MMM d, yyyy') : 'Ongoing',
+    enrolledClients: program.enrollments?.length || 0
+  }))
+
+  const filteredPrograms = formattedPrograms.filter((program) => {
     const matchesSearch =
       program.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      program.description.toLowerCase().includes(searchQuery.toLowerCase())
+      (program.description && program.description.toLowerCase().includes(searchQuery.toLowerCase()))
 
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes(program.status)
 
@@ -206,54 +127,79 @@ export default function ProgramsPage() {
                 </Button>
               </div>
             </div>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Enrolled Clients</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>End Date</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPrograms.length === 0 ? (
+            
+            {isError ? (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  There was an error loading the programs. Please try again later.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                        No programs found.
-                      </TableCell>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Enrolled Clients</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
+                      <TableHead className="w-[100px]">Actions</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredPrograms.map((program) => (
-                      <TableRow key={program.id}>
-                        <TableCell className="font-medium">{program.name}</TableCell>
-                        <TableCell>{program.description}</TableCell>
-                        <TableCell>{program.enrolledClients}</TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              program.status === "active"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-                            }`}
-                          >
-                            {program.status.charAt(0).toUpperCase() + program.status.slice(1)}
-                          </span>
-                        </TableCell>
-                        <TableCell>{program.startDate}</TableCell>
-                        <TableCell>{program.endDate}</TableCell>
-                        <TableCell>
-                          <ProgramsTableActions program={program} />
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      Array(5)
+                        .fill(0)
+                        .map((_, index) => (
+                          <TableRow key={`loading-${index}`}>
+                            <TableCell><Skeleton className="h-5 w-[120px]" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-[200px]" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-[60px]" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-[80px]" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-[100px]" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-[100px]" /></TableCell>
+                            <TableCell><Skeleton className="h-8 w-[60px]" /></TableCell>
+                          </TableRow>
+                        ))
+                    ) : filteredPrograms.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                          No programs found.
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                    ) : (
+                      filteredPrograms.map((program) => (
+                        <TableRow key={program.id}>
+                          <TableCell className="font-medium">{program.name}</TableCell>
+                          <TableCell>{program.description || "No description"}</TableCell>
+                          <TableCell>{program.enrolledClients}</TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                program.status === "active"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                              }`}
+                            >
+                              {program.status.charAt(0).toUpperCase() + program.status.slice(1)}
+                            </span>
+                          </TableCell>
+                          <TableCell>{program.startDateFormatted}</TableCell>
+                          <TableCell>{program.endDateFormatted}</TableCell>
+                          <TableCell>
+                            <ProgramsTableActions program={program} />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

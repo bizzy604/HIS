@@ -2,87 +2,46 @@
 
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "@/components/ui/chart"
 
-const data = [
-  {
-    month: "Jan",
-    enrollments: 65,
-    completions: 38,
-    dropouts: 5,
-  },
-  {
-    month: "Feb",
-    enrollments: 78,
-    completions: 42,
-    dropouts: 8,
-  },
-  {
-    month: "Mar",
-    enrollments: 90,
-    completions: 45,
-    dropouts: 10,
-  },
-  {
-    month: "Apr",
-    enrollments: 81,
-    completions: 50,
-    dropouts: 7,
-  },
-  {
-    month: "May",
-    enrollments: 95,
-    completions: 48,
-    dropouts: 12,
-  },
-  {
-    month: "Jun",
-    enrollments: 110,
-    completions: 55,
-    dropouts: 9,
-  },
-  {
-    month: "Jul",
-    enrollments: 120,
-    completions: 60,
-    dropouts: 11,
-  },
-  {
-    month: "Aug",
-    enrollments: 130,
-    completions: 65,
-    dropouts: 14,
-  },
-  {
-    month: "Sep",
-    enrollments: 115,
-    completions: 70,
-    dropouts: 10,
-  },
-  {
-    month: "Oct",
-    enrollments: 105,
-    completions: 75,
-    dropouts: 8,
-  },
-  {
-    month: "Nov",
-    enrollments: 95,
-    completions: 68,
-    dropouts: 7,
-  },
-  {
-    month: "Dec",
-    enrollments: 85,
-    completions: 72,
-    dropouts: 6,
-  },
+// Default data in case API data is not provided
+const defaultData = [
+  { month: "Jan", count: 0 },
+  { month: "Feb", count: 0 },
+  { month: "Mar", count: 0 },
+  { month: "Apr", count: 0 },
+  { month: "May", count: 0 },
+  { month: "Jun", count: 0 },
+  { month: "Jul", count: 0 },
+  { month: "Aug", count: 0 },
+  { month: "Sep", count: 0 },
+  { month: "Oct", count: 0 },
+  { month: "Nov", count: 0 },
+  { month: "Dec", count: 0 },
 ]
 
-export function MonthlyActivityChart() {
+interface MonthlyActivityChartProps {
+  data?: Array<{
+    month: string;
+    count: number;
+  }>;
+}
+
+export function MonthlyActivityChart({ data = defaultData }: MonthlyActivityChartProps) {
+  const chartData = data?.length ? data : defaultData;
+  
+  // Transform the data to include estimated completions and dropouts
+  // In a real implementation, this would come from the API
+  const transformedData = chartData.map(item => ({
+    month: item.month,
+    enrollments: item.count,
+    completions: Math.round(item.count * 0.65), // Estimate: 65% completion rate
+    dropouts: Math.round(item.count * 0.15), // Estimate: 15% dropout rate
+  }));
+  
   return (
     <div className="h-[350px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={data}
+          data={transformedData}
           margin={{
             top: 20,
             right: 30,

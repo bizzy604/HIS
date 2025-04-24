@@ -2,21 +2,29 @@
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "@/components/ui/chart"
 
-const data = [
-  { name: "Active", value: 850 },
-  { name: "Completed", value: 320 },
-  { name: "Dropped", value: 78 },
+// Default data in case API data is not provided
+const defaultData = [
+  { name: "No Status Data", value: 1 }
 ]
 
-const COLORS = ["#4ade80", "#60a5fa", "#f87171"]
+const COLORS = ["#4ade80", "#60a5fa", "#f87171", "#fb923c", "#a3a3a3"]
 
-export function ClientStatusChart() {
+interface ClientStatusChartProps {
+  data?: Array<{
+    name: string;
+    value: number;
+  }>;
+}
+
+export function ClientStatusChart({ data = defaultData }: ClientStatusChartProps) {
+  const chartData = data?.length ? data : defaultData;
+  
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={data}
+            data={chartData}
             cx="50%"
             cy="50%"
             labelLine={false}
@@ -25,7 +33,7 @@ export function ClientStatusChart() {
             dataKey="value"
             label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
           >
-            {data.map((entry, index) => (
+            {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>

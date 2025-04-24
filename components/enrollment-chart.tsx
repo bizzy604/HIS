@@ -2,22 +2,30 @@
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "@/components/ui/chart"
 
-const data = [
-  { month: "Jan", enrollments: 120 },
-  { month: "Feb", enrollments: 145 },
-  { month: "Mar", enrollments: 162 },
-  { month: "Apr", enrollments: 175 },
-  { month: "May", enrollments: 198 },
-  { month: "Jun", enrollments: 217 },
-  { month: "Jul", enrollments: 240 },
-  { month: "Aug", enrollments: 265 },
-  { month: "Sep", enrollments: 290 },
-  { month: "Oct", enrollments: 310 },
-  { month: "Nov", enrollments: 325 },
-  { month: "Dec", enrollments: 342 },
+// Default data in case API data is not provided
+const defaultData = [
+  { month: "Jan", count: 0 },
+  { month: "Feb", count: 0 },
+  { month: "Mar", count: 0 },
+  { month: "Apr", count: 0 },
+  { month: "May", count: 0 },
+  { month: "Jun", count: 0 },
+  { month: "Jul", count: 0 },
+  { month: "Aug", count: 0 },
+  { month: "Sep", count: 0 },
+  { month: "Oct", count: 0 },
+  { month: "Nov", count: 0 },
+  { month: "Dec", count: 0 },
 ]
 
-export function EnrollmentChart() {
+interface EnrollmentChartProps {
+  data?: Array<{
+    month: string;
+    count: number;
+  }>;
+}
+
+export function EnrollmentChart({ data = defaultData }: EnrollmentChartProps) {
   return (
     <div className="h-[350px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -38,7 +46,7 @@ export function EnrollmentChart() {
           />
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <Tooltip />
-          <Area type="monotone" dataKey="enrollments" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorEnrollments)" />
+          <Area type="monotone" dataKey="count" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorEnrollments)" />
         </AreaChart>
       </ResponsiveContainer>
     </div>

@@ -15,19 +15,18 @@ import {
 import { ProgramDialog } from "@/components/program-dialog"
 import { DeleteProgramDialog } from "@/components/delete-program-dialog"
 import { ViewEnrolledClientsDialog } from "@/components/view-enrolled-clients-dialog"
+import { Program } from "@/hooks/use-programs"
 
-interface Program {
-  id: string
-  name: string
-  description: string
-  enrolledClients: number
-  status: "active" | "inactive"
-  startDate: string
-  endDate: string
+// Extended program type to include formatted dates and enrollment count 
+// that we compute in the programs page
+interface ExtendedProgram extends Program {
+  startDateFormatted?: string;
+  endDateFormatted?: string;
+  enrolledClients?: number;
 }
 
 interface ProgramsTableActionsProps {
-  program: Program
+  program: ExtendedProgram
 }
 
 export function ProgramsTableActions({ program }: ProgramsTableActionsProps) {
@@ -49,25 +48,44 @@ export function ProgramsTableActions({ program }: ProgramsTableActionsProps) {
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
             <Edit className="mr-2 h-4 w-4" />
-            Edit Program
+            Edit
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setIsViewClientsOpen(true)}>
             <Users className="mr-2 h-4 w-4" />
             View Enrolled Clients
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setIsDeleteOpen(true)} className="text-red-600 focus:text-red-600">
+          <DropdownMenuItem onClick={() => setIsDeleteOpen(true)}>
             <Trash className="mr-2 h-4 w-4" />
-            Delete Program
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ProgramDialog open={isEditOpen} onOpenChange={setIsEditOpen} mode="edit" program={program} />
+      {/* We explicitly pass the required components their appropriate types */}
+      {isEditOpen && (
+        <ProgramDialog
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          mode="edit"
+          program={program}
+        />
+      )}
 
-      <DeleteProgramDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen} program={program} />
+      {isDeleteOpen && (
+        <DeleteProgramDialog 
+          open={isDeleteOpen} 
+          onOpenChange={setIsDeleteOpen} 
+          program={program} 
+        />
+      )}
 
-      <ViewEnrolledClientsDialog open={isViewClientsOpen} onOpenChange={setIsViewClientsOpen} program={program} />
+      {isViewClientsOpen && (
+        <ViewEnrolledClientsDialog
+          open={isViewClientsOpen}
+          onOpenChange={setIsViewClientsOpen}
+          program={program}
+        />
+      )}
     </>
   )
 }
