@@ -49,7 +49,7 @@ A modern, comprehensive hospital information management system built with Next.j
    Create a `.env` file in the root directory with the following variables:
    ```
    # Database
-   DATABASE_URL="postgresql://username:password@localhost:5432/his"
+   DATABASE_URL=""
    
    # Clerk Authentication
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...

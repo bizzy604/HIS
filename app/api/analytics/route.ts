@@ -132,24 +132,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({
       counts: {
-        totalClients,
-        activeClients,
-        totalPrograms,
-        activePrograms,
+        totalClients: Number(totalClients),
+        activeClients: Number(activeClients),
+        totalPrograms: Number(totalPrograms),
+        activePrograms: Number(activePrograms),
         totalEnrollments: enrollments.length
       },
-      enrollmentRate: totalClients > 0 ? (enrollments.length / totalClients) * 100 : 0,
+      enrollmentRate: Number(totalClients) > 0 ? (enrollments.length / Number(totalClients)) * 100 : 0,
       completionRate: enrollments.length > 0 
         ? (enrollments.filter((e: { status: string }) => e.status === "completed").length / enrollments.length) * 100 
         : 0,
-      monthlyEnrollments,
-      programDistribution: programDistribution.map((program: { name: string, _count: { enrollments: number } }) => ({
-        name: program.name,
-        value: program._count.enrollments
+      monthlyEnrollments: (monthlyEnrollments as any[]).map((item: { month: Date, count: bigint | number }) => ({
+        month: item.month,
+        count: Number(item.count)
       })),
-      clientStatusDistribution: clientStatusDistribution.map((status: { status: string, _count: { _all: number } }) => ({
+      programDistribution: programDistribution.map((program: { name: string, _count: { enrollments: bigint | number } }) => ({
+        name: program.name,
+        value: Number(program._count.enrollments)
+      })),
+      clientStatusDistribution: clientStatusDistribution.map((status: { status: string, _count: { _all: bigint | number } }) => ({
         name: status.status,
-        value: status._count._all
+        value: Number(status._count._all)
       })),
       recentActivity
     });

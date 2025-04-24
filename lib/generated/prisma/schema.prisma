@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../lib/generated/prisma"
@@ -14,11 +8,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Models based on the HIS requirements
-
 model Doctor {
   id        String    @id @default(uuid())
-  clerkId   String    @unique // Link to Clerk user
+  clerkId   String    @unique
   name      String
   email     String    @unique
   createdAt DateTime  @default(now())
@@ -32,11 +24,11 @@ model Client {
   name        String
   email       String?
   phone       String?
-  status      String       @default("active") // active, inactive
+  status      String       @default("active")
   lastVisit   DateTime?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  doctorId    String // For Row-Level Security
+  doctorId    String
   doctor      Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   enrollments Enrollment[]
 
@@ -47,14 +39,14 @@ model Program {
   id          String       @id @default(uuid())
   name        String
   description String?
-  status      String       @default("active") // active, inactive
+  status      String       @default("active")
   startDate   DateTime
   endDate     DateTime?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  doctorId    String // For Row-Level Security
-  doctor      Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  doctorId    String
   enrollments Enrollment[]
+  doctor      Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
   @@index([doctorId])
 }
@@ -65,7 +57,7 @@ model Enrollment {
   programId String
   startDate DateTime  @default(now())
   endDate   DateTime?
-  status    String    @default("active") // active, completed, dropped
+  status    String    @default("active")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)

@@ -1,91 +1,132 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Calendar, Clock, FileEdit, Plus, Trash, User, UserPlus } from "lucide-react"
+import { format, formatDistanceToNow } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
-type ActivityType = "client_added" | "program_created" | "client_enrolled" | "client_updated" | "program_deleted"
+type ActivityType = "client_added" | "program_created" | "client_enrolled" | "client_updated" | "program_deleted" | "enrollment_completed"
 
 interface Activity {
   id: string
   type: ActivityType
-  user: string
-  timestamp: string
-  details: string
+  clientName?: string
+  programName?: string
+  status?: string
+  createdAt: string
 }
 
-const activityData: Activity[] = [
-  {
-    id: "1",
-    type: "client_added",
-    user: "Dr. Smith",
-    timestamp: "2 hours ago",
-    details: "Added new client Sarah Johnson",
-  },
-  {
-    id: "2",
-    type: "program_created",
-    user: "Dr. Smith",
-    timestamp: "3 hours ago",
-    details: "Created new program Hypertension Management",
-  },
-  {
-    id: "3",
-    type: "client_enrolled",
-    user: "Dr. Wilson",
-    timestamp: "5 hours ago",
-    details: "Enrolled Michael Brown in Diabetes Management",
-  },
-  {
-    id: "4",
-    type: "client_updated",
-    user: "Dr. Smith",
-    timestamp: "Yesterday",
-    details: "Updated client information for Emily Davis",
-  },
-  {
-    id: "5",
-    type: "program_deleted",
-    user: "Dr. Wilson",
-    timestamp: "Yesterday",
-    details: "Removed outdated Smoking Cessation program",
-  },
-  {
-    id: "6",
-    type: "client_added",
-    user: "Dr. Smith",
-    timestamp: "2 days ago",
-    details: "Added new client Robert Johnson",
-  },
-  {
-    id: "7",
-    type: "client_enrolled",
-    user: "Dr. Wilson",
-    timestamp: "2 days ago",
-    details: "Enrolled Jane Smith in Mental Health Support",
-  },
-]
+export function RecentActivity() {
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-const getActivityIcon = (type: ActivityType) => {
+  useEffect(() => {
+    async function fetchRecentActivity() {
+      try {
+        setIsLoading(true)
+        const response = await fetch(`/api/analytics`)
+        
+        if (!response.ok) {
+          throw new Error(`Error fetching analytics: ${response.statusText}`)
+        }
+        
+        const data = await response.json()
+        
+        if (data.recentActivity && Array.isArray(data.recentActivity)) {
+          // Transform the API response into our Activity format
+          const formattedActivities = data.recentActivity.map((activity: any) => {
+            let type: ActivityType = "client_enrolled"
+            let details = ""
+            
+            // Determine the activity type based on available data
+            if (activity.client && activity.program) {
+              type = "client_enrolled"
+            } else if (activity.status === "completed") {
+              type = "enrollment_completed"
+            }
+            
+            return {
+              id: activity.id,
+              type,
+              clientName: activity.client?.name,
+              programName: activity.program?.name,
+              status: activity.status,
+              createdAt: activity.createdAt
+            }
+          })
+          
+          setActivities(formattedActivities)
+        }
+      } catch (err) {
+        console.error("Error fetching activity data:", err)
+        setError("Failed to load recent activity")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchRecentActivity()
+  }, [])
+
+  if (isLoading) {
+    return <div>Loading recent activity...</div>
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>
+  }
+
+  if (activities.length === 0) {
+    return <div className="text-center py-4 text-muted-foreground">No recent activity</div>
+  }
+
+  return (
+    <div className="space-y-4">
+      {activities.map((activity) => (
+        <div key={activity.id} className="flex items-start gap-4">
+          <div className={cn("p-2 rounded-full", getActivityColor(activity.type))}>
+            {getActivityIcon(activity.type)}
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm">
+              {getActivityText(activity)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {activity.createdAt
+                ? formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })
+                : ""}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function getActivityIcon(type: ActivityType) {
   switch (type) {
     case "client_added":
-      return <UserPlus className="h-4 w-4" />
+      return <UserPlus className="h-4 w-4 text-white" />
     case "program_created":
-      return <Plus className="h-4 w-4" />
+      return <Plus className="h-4 w-4 text-white" />
     case "client_enrolled":
-      return <Calendar className="h-4 w-4" />
+      return <Calendar className="h-4 w-4 text-white" />
     case "client_updated":
-      return <FileEdit className="h-4 w-4" />
+      return <FileEdit className="h-4 w-4 text-white" />
     case "program_deleted":
-      return <Trash className="h-4 w-4" />
+      return <Trash className="h-4 w-4 text-white" />
+    case "enrollment_completed":
+      return <Clock className="h-4 w-4 text-white" />
     default:
-      return <User className="h-4 w-4" />
+      return <User className="h-4 w-4 text-white" />
   }
 }
 
-const getActivityColor = (type: ActivityType) => {
+function getActivityColor(type: ActivityType) {
   switch (type) {
     case "client_added":
       return "bg-green-500"
@@ -97,39 +138,20 @@ const getActivityColor = (type: ActivityType) => {
       return "bg-amber-500"
     case "program_deleted":
       return "bg-red-500"
+    case "enrollment_completed":
+      return "bg-teal-500"
     default:
       return "bg-gray-500"
   }
 }
 
-export function RecentActivity() {
-  const [activities] = useState<Activity[]>(activityData)
-
-  return (
-    <div className="space-y-8">
-      <div className="space-y-4">
-        {activities.map((activity) => (
-          <div key={activity.id} className="flex items-start space-x-4">
-            <div
-              className={cn("flex h-8 w-8 items-center justify-center rounded-full", getActivityColor(activity.type))}
-            >
-              {getActivityIcon(activity.type)}
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium">{activity.details}</p>
-              <div className="flex items-center text-xs text-muted-foreground">
-                <span>{activity.user}</span>
-                <span className="mx-1">•</span>
-                <Clock className="mr-1 h-3 w-3" />
-                <span>{activity.timestamp}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <Button variant="outline" size="sm" className="w-full">
-        View All Activity
-      </Button>
-    </div>
-  )
+function getActivityText(activity: Activity) {
+  switch (activity.type) {
+    case "client_enrolled":
+      return `${activity.clientName || "A client"} enrolled in ${activity.programName || "a program"}`
+    case "enrollment_completed":
+      return `${activity.clientName || "A client"} completed ${activity.programName || "a program"}`
+    default:
+      return `Activity: ${activity.clientName} - ${activity.programName}`
+  }
 }

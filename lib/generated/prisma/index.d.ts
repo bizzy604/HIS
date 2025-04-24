@@ -3690,8 +3690,8 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     doctorId?: boolean
-    doctor?: boolean | DoctorDefaultArgs<ExtArgs>
     enrollments?: boolean | Program$enrollmentsArgs<ExtArgs>
+    doctor?: boolean | DoctorDefaultArgs<ExtArgs>
     _count?: boolean | ProgramCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["program"]>
 
@@ -3735,8 +3735,8 @@ export namespace Prisma {
 
   export type ProgramOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "status" | "startDate" | "endDate" | "createdAt" | "updatedAt" | "doctorId", ExtArgs["result"]["program"]>
   export type ProgramInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    doctor?: boolean | DoctorDefaultArgs<ExtArgs>
     enrollments?: boolean | Program$enrollmentsArgs<ExtArgs>
+    doctor?: boolean | DoctorDefaultArgs<ExtArgs>
     _count?: boolean | ProgramCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ProgramIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3749,8 +3749,8 @@ export namespace Prisma {
   export type $ProgramPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Program"
     objects: {
-      doctor: Prisma.$DoctorPayload<ExtArgs>
       enrollments: Prisma.$EnrollmentPayload<ExtArgs>[]
+      doctor: Prisma.$DoctorPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4156,8 +4156,8 @@ export namespace Prisma {
    */
   export interface Prisma__ProgramClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    doctor<T extends DoctorDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DoctorDefaultArgs<ExtArgs>>): Prisma__DoctorClient<$Result.GetResult<Prisma.$DoctorPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     enrollments<T extends Program$enrollmentsArgs<ExtArgs> = {}>(args?: Subset<T, Program$enrollmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EnrollmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    doctor<T extends DoctorDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DoctorDefaultArgs<ExtArgs>>): Prisma__DoctorClient<$Result.GetResult<Prisma.$DoctorPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6037,8 +6037,8 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Program"> | Date | string
     updatedAt?: DateTimeFilter<"Program"> | Date | string
     doctorId?: StringFilter<"Program"> | string
-    doctor?: XOR<DoctorScalarRelationFilter, DoctorWhereInput>
     enrollments?: EnrollmentListRelationFilter
+    doctor?: XOR<DoctorScalarRelationFilter, DoctorWhereInput>
   }
 
   export type ProgramOrderByWithRelationInput = {
@@ -6051,8 +6051,8 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     doctorId?: SortOrder
-    doctor?: DoctorOrderByWithRelationInput
     enrollments?: EnrollmentOrderByRelationAggregateInput
+    doctor?: DoctorOrderByWithRelationInput
   }
 
   export type ProgramWhereUniqueInput = Prisma.AtLeast<{
@@ -6068,8 +6068,8 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Program"> | Date | string
     updatedAt?: DateTimeFilter<"Program"> | Date | string
     doctorId?: StringFilter<"Program"> | string
-    doctor?: XOR<DoctorScalarRelationFilter, DoctorWhereInput>
     enrollments?: EnrollmentListRelationFilter
+    doctor?: XOR<DoctorScalarRelationFilter, DoctorWhereInput>
   }, "id">
 
   export type ProgramOrderByWithAggregationInput = {
@@ -6343,8 +6343,8 @@ export namespace Prisma {
     endDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    doctor: DoctorCreateNestedOneWithoutProgramsInput
     enrollments?: EnrollmentCreateNestedManyWithoutProgramInput
+    doctor: DoctorCreateNestedOneWithoutProgramsInput
   }
 
   export type ProgramUncheckedCreateInput = {
@@ -6369,8 +6369,8 @@ export namespace Prisma {
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    doctor?: DoctorUpdateOneRequiredWithoutProgramsNestedInput
     enrollments?: EnrollmentUpdateManyWithoutProgramNestedInput
+    doctor?: DoctorUpdateOneRequiredWithoutProgramsNestedInput
   }
 
   export type ProgramUncheckedUpdateInput = {
@@ -6955,12 +6955,6 @@ export namespace Prisma {
     deleteMany?: EnrollmentScalarWhereInput | EnrollmentScalarWhereInput[]
   }
 
-  export type DoctorCreateNestedOneWithoutProgramsInput = {
-    create?: XOR<DoctorCreateWithoutProgramsInput, DoctorUncheckedCreateWithoutProgramsInput>
-    connectOrCreate?: DoctorCreateOrConnectWithoutProgramsInput
-    connect?: DoctorWhereUniqueInput
-  }
-
   export type EnrollmentCreateNestedManyWithoutProgramInput = {
     create?: XOR<EnrollmentCreateWithoutProgramInput, EnrollmentUncheckedCreateWithoutProgramInput> | EnrollmentCreateWithoutProgramInput[] | EnrollmentUncheckedCreateWithoutProgramInput[]
     connectOrCreate?: EnrollmentCreateOrConnectWithoutProgramInput | EnrollmentCreateOrConnectWithoutProgramInput[]
@@ -6968,19 +6962,17 @@ export namespace Prisma {
     connect?: EnrollmentWhereUniqueInput | EnrollmentWhereUniqueInput[]
   }
 
+  export type DoctorCreateNestedOneWithoutProgramsInput = {
+    create?: XOR<DoctorCreateWithoutProgramsInput, DoctorUncheckedCreateWithoutProgramsInput>
+    connectOrCreate?: DoctorCreateOrConnectWithoutProgramsInput
+    connect?: DoctorWhereUniqueInput
+  }
+
   export type EnrollmentUncheckedCreateNestedManyWithoutProgramInput = {
     create?: XOR<EnrollmentCreateWithoutProgramInput, EnrollmentUncheckedCreateWithoutProgramInput> | EnrollmentCreateWithoutProgramInput[] | EnrollmentUncheckedCreateWithoutProgramInput[]
     connectOrCreate?: EnrollmentCreateOrConnectWithoutProgramInput | EnrollmentCreateOrConnectWithoutProgramInput[]
     createMany?: EnrollmentCreateManyProgramInputEnvelope
     connect?: EnrollmentWhereUniqueInput | EnrollmentWhereUniqueInput[]
-  }
-
-  export type DoctorUpdateOneRequiredWithoutProgramsNestedInput = {
-    create?: XOR<DoctorCreateWithoutProgramsInput, DoctorUncheckedCreateWithoutProgramsInput>
-    connectOrCreate?: DoctorCreateOrConnectWithoutProgramsInput
-    upsert?: DoctorUpsertWithoutProgramsInput
-    connect?: DoctorWhereUniqueInput
-    update?: XOR<XOR<DoctorUpdateToOneWithWhereWithoutProgramsInput, DoctorUpdateWithoutProgramsInput>, DoctorUncheckedUpdateWithoutProgramsInput>
   }
 
   export type EnrollmentUpdateManyWithoutProgramNestedInput = {
@@ -6995,6 +6987,14 @@ export namespace Prisma {
     update?: EnrollmentUpdateWithWhereUniqueWithoutProgramInput | EnrollmentUpdateWithWhereUniqueWithoutProgramInput[]
     updateMany?: EnrollmentUpdateManyWithWhereWithoutProgramInput | EnrollmentUpdateManyWithWhereWithoutProgramInput[]
     deleteMany?: EnrollmentScalarWhereInput | EnrollmentScalarWhereInput[]
+  }
+
+  export type DoctorUpdateOneRequiredWithoutProgramsNestedInput = {
+    create?: XOR<DoctorCreateWithoutProgramsInput, DoctorUncheckedCreateWithoutProgramsInput>
+    connectOrCreate?: DoctorCreateOrConnectWithoutProgramsInput
+    upsert?: DoctorUpsertWithoutProgramsInput
+    connect?: DoctorWhereUniqueInput
+    update?: XOR<XOR<DoctorUpdateToOneWithWhereWithoutProgramsInput, DoctorUpdateWithoutProgramsInput>, DoctorUncheckedUpdateWithoutProgramsInput>
   }
 
   export type EnrollmentUncheckedUpdateManyWithoutProgramNestedInput = {
@@ -7419,31 +7419,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Enrollment"> | Date | string
   }
 
-  export type DoctorCreateWithoutProgramsInput = {
-    id?: string
-    clerkId: string
-    name: string
-    email: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    clients?: ClientCreateNestedManyWithoutDoctorInput
-  }
-
-  export type DoctorUncheckedCreateWithoutProgramsInput = {
-    id?: string
-    clerkId: string
-    name: string
-    email: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    clients?: ClientUncheckedCreateNestedManyWithoutDoctorInput
-  }
-
-  export type DoctorCreateOrConnectWithoutProgramsInput = {
-    where: DoctorWhereUniqueInput
-    create: XOR<DoctorCreateWithoutProgramsInput, DoctorUncheckedCreateWithoutProgramsInput>
-  }
-
   export type EnrollmentCreateWithoutProgramInput = {
     id?: string
     startDate?: Date | string
@@ -7472,6 +7447,47 @@ export namespace Prisma {
   export type EnrollmentCreateManyProgramInputEnvelope = {
     data: EnrollmentCreateManyProgramInput | EnrollmentCreateManyProgramInput[]
     skipDuplicates?: boolean
+  }
+
+  export type DoctorCreateWithoutProgramsInput = {
+    id?: string
+    clerkId: string
+    name: string
+    email: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    clients?: ClientCreateNestedManyWithoutDoctorInput
+  }
+
+  export type DoctorUncheckedCreateWithoutProgramsInput = {
+    id?: string
+    clerkId: string
+    name: string
+    email: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    clients?: ClientUncheckedCreateNestedManyWithoutDoctorInput
+  }
+
+  export type DoctorCreateOrConnectWithoutProgramsInput = {
+    where: DoctorWhereUniqueInput
+    create: XOR<DoctorCreateWithoutProgramsInput, DoctorUncheckedCreateWithoutProgramsInput>
+  }
+
+  export type EnrollmentUpsertWithWhereUniqueWithoutProgramInput = {
+    where: EnrollmentWhereUniqueInput
+    update: XOR<EnrollmentUpdateWithoutProgramInput, EnrollmentUncheckedUpdateWithoutProgramInput>
+    create: XOR<EnrollmentCreateWithoutProgramInput, EnrollmentUncheckedCreateWithoutProgramInput>
+  }
+
+  export type EnrollmentUpdateWithWhereUniqueWithoutProgramInput = {
+    where: EnrollmentWhereUniqueInput
+    data: XOR<EnrollmentUpdateWithoutProgramInput, EnrollmentUncheckedUpdateWithoutProgramInput>
+  }
+
+  export type EnrollmentUpdateManyWithWhereWithoutProgramInput = {
+    where: EnrollmentScalarWhereInput
+    data: XOR<EnrollmentUpdateManyMutationInput, EnrollmentUncheckedUpdateManyWithoutProgramInput>
   }
 
   export type DoctorUpsertWithoutProgramsInput = {
@@ -7503,22 +7519,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     clients?: ClientUncheckedUpdateManyWithoutDoctorNestedInput
-  }
-
-  export type EnrollmentUpsertWithWhereUniqueWithoutProgramInput = {
-    where: EnrollmentWhereUniqueInput
-    update: XOR<EnrollmentUpdateWithoutProgramInput, EnrollmentUncheckedUpdateWithoutProgramInput>
-    create: XOR<EnrollmentCreateWithoutProgramInput, EnrollmentUncheckedCreateWithoutProgramInput>
-  }
-
-  export type EnrollmentUpdateWithWhereUniqueWithoutProgramInput = {
-    where: EnrollmentWhereUniqueInput
-    data: XOR<EnrollmentUpdateWithoutProgramInput, EnrollmentUncheckedUpdateWithoutProgramInput>
-  }
-
-  export type EnrollmentUpdateManyWithWhereWithoutProgramInput = {
-    where: EnrollmentScalarWhereInput
-    data: XOR<EnrollmentUpdateManyMutationInput, EnrollmentUncheckedUpdateManyWithoutProgramInput>
   }
 
   export type ClientCreateWithoutEnrollmentsInput = {
