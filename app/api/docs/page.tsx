@@ -31,7 +31,7 @@ export default function ApiDocsPage() {
   useEffect(() => {
     async function fetchApiDocs() {
       try {
-        const response = await fetch('/api/docs');
+        const response = await fetch('/api/docs/data');
         if (!response.ok) {
           throw new Error('Failed to fetch API documentation');
         }

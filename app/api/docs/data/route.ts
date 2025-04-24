@@ -203,8 +203,10 @@ const apiDocs = {
                 },
               },
               example: {
-                name: 'John Doe Updated',
-                status: 'inactive',
+                name: 'John Doe',
+                email: 'john.doe@example.com',
+                phone: '555-123-4567',
+                status: 'active',
               },
             },
           },
@@ -305,7 +307,7 @@ const apiDocs = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['name', 'status', 'startDate'],
+                required: ['name', 'description'],
                 properties: {
                   name: {
                     type: 'string',
@@ -320,25 +322,7 @@ const apiDocs = {
                     enum: ['active', 'inactive'],
                     description: 'Program status',
                   },
-                  startDate: {
-                    type: 'string',
-                    format: 'date',
-                    description: 'Program start date',
-                  },
-                  endDate: {
-                    type: 'string',
-                    format: 'date',
-                    description: 'Program end date',
-                    nullable: true,
-                  },
                 },
-              },
-              example: {
-                name: 'Diabetes Management',
-                description: 'Comprehensive program for managing diabetes',
-                status: 'active',
-                startDate: '2023-01-01',
-                endDate: '2023-12-31',
               },
             },
           },
@@ -440,23 +424,7 @@ const apiDocs = {
                     enum: ['active', 'inactive'],
                     description: 'Program status',
                   },
-                  startDate: {
-                    type: 'string',
-                    format: 'date',
-                    description: 'Program start date',
-                  },
-                  endDate: {
-                    type: 'string',
-                    format: 'date',
-                    description: 'Program end date',
-                    nullable: true,
-                  },
                 },
-              },
-              example: {
-                name: 'Diabetes Management Updated',
-                status: 'inactive',
-                endDate: '2023-10-31',
               },
             },
           },
@@ -530,6 +498,7 @@ const apiDocs = {
           {
             name: 'clientId',
             in: 'query',
+            required: false,
             description: 'Filter enrollments by client ID',
             schema: {
               type: 'string',
@@ -538,9 +507,20 @@ const apiDocs = {
           {
             name: 'programId',
             in: 'query',
+            required: false,
             description: 'Filter enrollments by program ID',
             schema: {
               type: 'string',
+            },
+          },
+          {
+            name: 'status',
+            in: 'query',
+            required: false,
+            description: 'Filter enrollments by status',
+            schema: {
+              type: 'string',
+              enum: ['active', 'completed', 'canceled'],
             },
           },
         ],
@@ -585,30 +565,26 @@ const apiDocs = {
                     type: 'string',
                     description: 'ID of the program to enroll in',
                   },
-                  status: {
-                    type: 'string',
-                    enum: ['active', 'completed', 'dropped'],
-                    description: 'Enrollment status',
-                    default: 'active',
-                  },
                   startDate: {
                     type: 'string',
-                    format: 'date',
-                    description: 'Enrollment start date',
-                    default: 'current date',
+                    format: 'date-time',
+                    description: 'Start date of the enrollment',
                   },
                   endDate: {
                     type: 'string',
-                    format: 'date',
-                    description: 'Enrollment end date',
-                    nullable: true,
+                    format: 'date-time',
+                    description: 'End date of the enrollment',
+                  },
+                  status: {
+                    type: 'string',
+                    enum: ['active', 'completed', 'canceled'],
+                    description: 'Status of the enrollment',
+                  },
+                  notes: {
+                    type: 'string',
+                    description: 'Notes about the enrollment',
                   },
                 },
-              },
-              example: {
-                clientId: 'client_123',
-                programId: 'program_123',
-                status: 'active',
               },
             },
           },
@@ -629,9 +605,6 @@ const apiDocs = {
           },
           '401': {
             description: 'Unauthorized',
-          },
-          '403': {
-            description: 'Forbidden - client or program does not belong to the current doctor',
           },
           '404': {
             description: 'Client or program not found',
@@ -703,27 +676,26 @@ const apiDocs = {
               schema: {
                 type: 'object',
                 properties: {
-                  status: {
-                    type: 'string',
-                    enum: ['active', 'completed', 'dropped'],
-                    description: 'Enrollment status',
-                  },
                   startDate: {
                     type: 'string',
-                    format: 'date',
-                    description: 'Enrollment start date',
+                    format: 'date-time',
+                    description: 'Start date of the enrollment',
                   },
                   endDate: {
                     type: 'string',
-                    format: 'date',
-                    description: 'Enrollment end date',
-                    nullable: true,
+                    format: 'date-time',
+                    description: 'End date of the enrollment',
+                  },
+                  status: {
+                    type: 'string',
+                    enum: ['active', 'completed', 'canceled'],
+                    description: 'Status of the enrollment',
+                  },
+                  notes: {
+                    type: 'string',
+                    description: 'Notes about the enrollment',
                   },
                 },
-              },
-              example: {
-                status: 'completed',
-                endDate: '2023-10-31',
               },
             },
           },
@@ -795,21 +767,14 @@ const apiDocs = {
         description: 'Returns analytics data for the current doctor',
         parameters: [
           {
-            name: 'startDate',
+            name: 'period',
             in: 'query',
-            description: 'Filter analytics by start date',
+            required: false,
+            description: 'Period to calculate analytics for',
             schema: {
               type: 'string',
-              format: 'date',
-            },
-          },
-          {
-            name: 'endDate',
-            in: 'query',
-            description: 'Filter analytics by end date',
-            schema: {
-              type: 'string',
-              format: 'date',
+              enum: ['week', 'month', 'quarter', 'year'],
+              default: 'month',
             },
           },
         ],
@@ -841,7 +806,7 @@ const apiDocs = {
         properties: {
           id: {
             type: 'string',
-            description: 'Unique identifier for the client',
+            description: 'Client ID',
           },
           name: {
             type: 'string',
@@ -851,12 +816,10 @@ const apiDocs = {
             type: 'string',
             format: 'email',
             description: 'Client email address',
-            nullable: true,
           },
           phone: {
             type: 'string',
             description: 'Client phone number',
-            nullable: true,
           },
           status: {
             type: 'string',
@@ -866,26 +829,25 @@ const apiDocs = {
           lastVisit: {
             type: 'string',
             format: 'date-time',
-            description: 'Last visit date',
-            nullable: true,
+            description: 'Date of last visit',
           },
           createdAt: {
             type: 'string',
             format: 'date-time',
-            description: 'Creation date',
+            description: 'Date the client was created',
           },
           updatedAt: {
             type: 'string',
             format: 'date-time',
-            description: 'Last update date',
+            description: 'Date the client was last updated',
           },
           doctorId: {
             type: 'string',
-            description: 'ID of the doctor who created the client',
+            description: 'ID of the doctor the client belongs to',
           },
           enrollments: {
             type: 'array',
-            description: 'List of enrollments for this client',
+            description: 'List of programs the client is enrolled in',
             items: {
               type: 'object',
               properties: {
@@ -920,7 +882,7 @@ const apiDocs = {
         properties: {
           id: {
             type: 'string',
-            description: 'Unique identifier for the program',
+            description: 'Program ID',
           },
           name: {
             type: 'string',
@@ -929,67 +891,29 @@ const apiDocs = {
           description: {
             type: 'string',
             description: 'Program description',
-            nullable: true,
           },
           status: {
             type: 'string',
             enum: ['active', 'inactive'],
             description: 'Program status',
           },
-          startDate: {
-            type: 'string',
-            format: 'date',
-            description: 'Program start date',
-          },
-          endDate: {
-            type: 'string',
-            format: 'date',
-            description: 'Program end date',
-            nullable: true,
-          },
           createdAt: {
             type: 'string',
             format: 'date-time',
-            description: 'Creation date',
+            description: 'Date the program was created',
           },
           updatedAt: {
             type: 'string',
             format: 'date-time',
-            description: 'Last update date',
+            description: 'Date the program was last updated',
           },
           doctorId: {
             type: 'string',
-            description: 'ID of the doctor who created the program',
+            description: 'ID of the doctor the program belongs to',
           },
-          enrollments: {
-            type: 'array',
-            description: 'List of enrollments for this program',
-            items: {
-              type: 'object',
-              properties: {
-                id: {
-                  type: 'string',
-                  description: 'Enrollment ID',
-                },
-                clientId: {
-                  type: 'string',
-                  description: 'Client ID',
-                },
-                client: {
-                  type: 'object',
-                  properties: {
-                    id: {
-                      type: 'string',
-                      description: 'Client ID',
-                    },
-                    name: {
-                      type: 'string',
-                      description: 'Client name',
-                    },
-                  },
-                },
-              },
-            },
+          enrollmentCount: {
+            type: 'integer',
+            description: 'Number of clients enrolled in the program',
           },
         },
       },
@@ -998,41 +922,44 @@ const apiDocs = {
         properties: {
           id: {
             type: 'string',
-            description: 'Unique identifier for the enrollment',
+            description: 'Enrollment ID',
           },
           clientId: {
             type: 'string',
-            description: 'ID of the enrolled client',
+            description: 'Client ID',
           },
           programId: {
             type: 'string',
-            description: 'ID of the program',
+            description: 'Program ID',
           },
           startDate: {
             type: 'string',
-            format: 'date',
-            description: 'Enrollment start date',
+            format: 'date-time',
+            description: 'Start date of the enrollment',
           },
           endDate: {
             type: 'string',
-            format: 'date',
-            description: 'Enrollment end date',
-            nullable: true,
+            format: 'date-time',
+            description: 'End date of the enrollment',
           },
           status: {
             type: 'string',
-            enum: ['active', 'completed', 'dropped'],
-            description: 'Enrollment status',
+            enum: ['active', 'completed', 'canceled'],
+            description: 'Status of the enrollment',
+          },
+          notes: {
+            type: 'string',
+            description: 'Notes about the enrollment',
           },
           createdAt: {
             type: 'string',
             format: 'date-time',
-            description: 'Creation date',
+            description: 'Date the enrollment was created',
           },
           updatedAt: {
             type: 'string',
             format: 'date-time',
-            description: 'Last update date',
+            description: 'Date the enrollment was last updated',
           },
           client: {
             $ref: '#/components/schemas/Client',
@@ -1048,7 +975,7 @@ const apiDocs = {
           counts: {
             type: 'object',
             properties: {
-              totalClients: {
+              clients: {
                 type: 'integer',
                 description: 'Total number of clients',
               },
@@ -1056,7 +983,7 @@ const apiDocs = {
                 type: 'integer',
                 description: 'Number of active clients',
               },
-              totalPrograms: {
+              programs: {
                 type: 'integer',
                 description: 'Total number of programs',
               },
@@ -1064,103 +991,71 @@ const apiDocs = {
                 type: 'integer',
                 description: 'Number of active programs',
               },
-              totalEnrollments: {
+              enrollments: {
                 type: 'integer',
                 description: 'Total number of enrollments',
               },
-            },
-          },
-          enrollmentRate: {
-            type: 'number',
-            format: 'float',
-            description: 'Average enrollment rate as a percentage',
-          },
-          completionRate: {
-            type: 'number',
-            format: 'float',
-            description: 'Average completion rate as a percentage',
-          },
-          monthlyEnrollments: {
-            type: 'array',
-            description: 'Monthly enrollment counts',
-            items: {
-              type: 'object',
-              properties: {
-                month: {
-                  type: 'string',
-                  description: 'Month name (e.g., "Jan")',
-                },
-                count: {
-                  type: 'integer',
-                  description: 'Number of enrollments for the month',
-                },
+              activeEnrollments: {
+                type: 'integer',
+                description: 'Number of active enrollments',
               },
             },
           },
-          programDistribution: {
-            type: 'array',
-            description: 'Distribution of clients across programs',
-            items: {
-              type: 'object',
-              properties: {
-                name: {
-                  type: 'string',
-                  description: 'Program name',
-                },
-                value: {
-                  type: 'integer',
-                  description: 'Number of clients enrolled in the program',
-                },
-              },
-            },
-          },
-          clientStatusDistribution: {
-            type: 'array',
-            description: 'Distribution of clients by status',
-            items: {
-              type: 'object',
-              properties: {
-                name: {
-                  type: 'string',
-                  description: 'Status name (e.g., "Active")',
-                },
-                value: {
-                  type: 'integer',
-                  description: 'Number of clients with the status',
+          trends: {
+            type: 'object',
+            properties: {
+              newClients: {
+                type: 'array',
+                description: 'Number of new clients over time',
+                items: {
+                  type: 'object',
+                  properties: {
+                    date: {
+                      type: 'string',
+                      format: 'date',
+                      description: 'Date',
+                    },
+                    count: {
+                      type: 'integer',
+                      description: 'Count for that date',
+                    },
+                  },
                 },
               },
-            },
-          },
-          recentActivity: {
-            type: 'array',
-            description: 'Recent client activities',
-            items: {
-              type: 'object',
-              properties: {
-                clientId: {
-                  type: 'string',
-                  description: 'Client ID',
+              newEnrollments: {
+                type: 'array',
+                description: 'Number of new enrollments over time',
+                items: {
+                  type: 'object',
+                  properties: {
+                    date: {
+                      type: 'string',
+                      format: 'date',
+                      description: 'Date',
+                    },
+                    count: {
+                      type: 'integer',
+                      description: 'Count for that date',
+                    },
+                  },
                 },
-                clientName: {
-                  type: 'string',
-                  description: 'Client name',
-                },
-                programId: {
-                  type: 'string',
-                  description: 'Program ID',
-                },
-                programName: {
-                  type: 'string',
-                  description: 'Program name',
-                },
-                action: {
-                  type: 'string',
-                  description: 'Action type (e.g., "Enrolled", "Completed")',
-                },
-                date: {
-                  type: 'string',
-                  format: 'date-time',
-                  description: 'Action date',
+              },
+              completedEnrollments: {
+                type: 'array',
+                description: 'Number of completed enrollments over time',
+                items: {
+                  type: 'object',
+                  properties: {
+                    date: {
+                      type: 'string',
+                      format: 'date',
+                      description: 'Date',
+                    },
+                    count: {
+                      type: 'integer',
+                      description: 'Count for that date',
+                    },
+                  },
                 },
               },
             },

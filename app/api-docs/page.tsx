@@ -1,13 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import SwaggerUI from 'swagger-ui-react';
-import 'swagger-ui-react/swagger-ui.css';
+import dynamic from 'next/dynamic';
+
+// Use dynamic import with SSR disabled to prevent build issues
+const SwaggerUI = dynamic(() => import('swagger-ui-react'), { 
+  ssr: false,
+  loading: () => <div className="p-8">Loading Swagger UI...</div>
+});
 
 export default function ApiDocs() {
   const [spec, setSpec] = useState(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    // Mark that we're on the client side
+    setIsClient(true);
+    
     // Fetch the OpenAPI specification
     fetch('/api/swagger')
       .then((response) => response.json())
@@ -15,8 +24,12 @@ export default function ApiDocs() {
       .catch((error) => console.error('Error loading API spec:', error));
   }, []);
 
-  if (!spec) {
+  if (!isClient) {
     return <div className="p-8">Loading API documentation...</div>;
+  }
+
+  if (!spec) {
+    return <div className="p-8">Loading API specification...</div>;
   }
 
   return (
