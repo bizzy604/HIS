@@ -2,6 +2,53 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentDoctor } from "@/lib/auth";
 
+/**
+ * @swagger
+ * /clients:
+ *   get:
+ *     summary: Get all clients for the current doctor
+ *     description: Retrieves all clients associated with the authenticated doctor.
+ *     tags:
+ *       - Clients
+ *     responses:
+ *       200:
+ *         description: A list of client records
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                     nullable: true
+ *                   phone:
+ *                     type: string
+ *                     nullable: true
+ *                   status:
+ *                     type: string
+ *                     enum: [active, inactive]
+ *                   doctorId:
+ *                     type: string
+ *                   lastVisit:
+ *                     type: string
+ *                     nullable: true
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
+ *       401:
+ *         description: Unauthorized - User is not authenticated
+ *       500:
+ *         description: Server error
+ */
 // GET /api/clients - Get all clients for the current doctor
 export async function GET(request: NextRequest) {
   try {
@@ -36,6 +83,48 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * @swagger
+ * /clients:
+ *   post:
+ *     summary: Create a new client
+ *     description: Creates a new client associated with the authenticated doctor.
+ *     tags:
+ *       - Clients
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Client's full name
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Client's email address
+ *               phone:
+ *                 type: string
+ *                 description: Client's phone number
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive]
+ *                 default: active
+ *                 description: Client's status
+ *     responses:
+ *       201:
+ *         description: Client successfully created
+ *       400:
+ *         description: Bad request - Invalid data
+ *       401:
+ *         description: Unauthorized - User is not authenticated
+ *       500:
+ *         description: Server error
+ */
 // POST /api/clients - Create a new client
 export async function POST(request: NextRequest) {
   try {

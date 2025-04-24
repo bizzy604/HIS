@@ -40,7 +40,7 @@ A modern, comprehensive hospital information management system built with Next.j
 
 2. Install dependencies:
    ```bash
-   npm install
+   npm install --save-dev --legacy-peer-deps
    # or
    yarn install
    ```
@@ -128,7 +128,17 @@ The system provides the following API endpoints:
 - `/api/enrollments` - Enrollment management
 - `/api/analytics` - Analytics data
 
-See the API documentation at `/api/docs` for detailed information.
+The API is documented using Swagger UI. You can access the interactive API documentation at `/api-docs` when the application is running.
+
+### API Documentation
+
+To explore and test the API endpoints:
+
+1. Start the development server: `npm run dev`
+2. Open [http://localhost:3000/api-docs](http://localhost:3000/api-docs) in your browser
+3. Use the Swagger UI to view endpoint details and test API calls directly from the browser
+
+All API endpoints require authentication and are protected by Clerk middleware.
 
 ## Testing
 

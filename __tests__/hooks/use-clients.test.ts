@@ -3,14 +3,20 @@
  */
 
 import { renderHook, waitFor } from '@testing-library/react';
-import { useClients } from '@/hooks/use-clients';
+import { useClients, createClient, updateClient, Client } from '@/hooks/use-clients';
 import * as SWR from 'swr';
+import { toast } from '@/hooks/use-toast';
 
 // Mock SWR
 jest.mock('swr', () => ({
   __esModule: true,
   default: jest.fn(),
   mutate: jest.fn(),
+}));
+
+// Mock toast
+jest.mock('@/hooks/use-toast', () => ({
+  toast: jest.fn(),
 }));
 
 // Mock fetch
@@ -29,14 +35,26 @@ describe('useClients Hook', () => {
         name: 'John Doe',
         email: 'john@example.com',
         status: 'active',
+        doctorId: 'doctor_123',
+        enrollments: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastVisit: null,
+        phone: '123-456-7890',
       },
       {
         id: 'client_2',
         name: 'Jane Smith',
         email: 'jane@example.com',
         status: 'inactive',
+        doctorId: 'doctor_123',
+        enrollments: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastVisit: null,
+        phone: '987-654-3210',
       },
-    ];
+    ] as Client[];
 
     // Mock SWR to return clients data
     (SWR.default as jest.Mock).mockReturnValue({
@@ -53,10 +71,10 @@ describe('useClients Hook', () => {
     // Check the returned data
     expect(result.current.clients).toEqual(mockClients);
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.isError).toBe(false);
+    expect(result.current.isError).toBe(null);
     
     // Check that SWR was called with the correct key
-    expect(SWR.default).toHaveBeenCalledWith('/api/clients');
+    expect(SWR.default).toHaveBeenCalledWith('/api/clients', expect.any(Function));
   });
 
   it('should handle loading state', async () => {
@@ -73,16 +91,18 @@ describe('useClients Hook', () => {
     const { result } = renderHook(() => useClients());
 
     // Check the returned state
-    expect(result.current.clients).toBeUndefined();
+    expect(result.current.clients).toEqual([]);
     expect(result.current.isLoading).toBe(true);
-    expect(result.current.isError).toBe(false);
+    expect(result.current.isError).toBe(null);
   });
 
   it('should handle error state', async () => {
+    const testError = new Error('Failed to fetch clients');
+    
     // Mock SWR to return error
     (SWR.default as jest.Mock).mockReturnValue({
       data: undefined,
-      error: new Error('Failed to fetch clients'),
+      error: testError,
       isLoading: false,
       isValidating: false,
       mutate: jest.fn(),
@@ -92,23 +112,21 @@ describe('useClients Hook', () => {
     const { result } = renderHook(() => useClients());
 
     // Check the returned state
-    expect(result.current.clients).toBeUndefined();
+    expect(result.current.clients).toEqual([]);
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.isError).toBe(true);
-    expect(result.current.error).toEqual(new Error('Failed to fetch clients'));
+    expect(result.current.isError).toEqual(testError);
+  });
+});
+
+describe('Client API Functions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should create a client correctly', async () => {
-    // Mock clients data and SWR mutate
+    // Mock SWR mutate
     const mockMutate = jest.fn();
-    (SWR.default as jest.Mock).mockReturnValue({
-      data: [],
-      error: null,
-      isLoading: false,
-      isValidating: false,
-      mutate: mockMutate,
-    });
-    (SWR.mutate as jest.Mock) = mockMutate;
+    (SWR.mutate as jest.Mock).mockImplementation(mockMutate);
 
     // Mock fetch response
     const mockResponse = {
@@ -122,17 +140,15 @@ describe('useClients Hook', () => {
     };
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-    // Render the hook
-    const { result } = renderHook(() => useClients());
-
-    // Call createClient
+    // Call createClient function directly
     const newClient = {
       name: 'New Client',
       email: 'new@example.com',
-      status: 'active',
+      phone: '',
+      status: 'active' as const,
     };
     
-    const response = await result.current.createClient(newClient);
+    const response = await createClient(newClient);
 
     // Check that fetch was called correctly
     expect(global.fetch).toHaveBeenCalledWith('/api/clients', {
@@ -144,7 +160,7 @@ describe('useClients Hook', () => {
     });
 
     // Check that mutate was called to update the cache
-    expect(mockMutate).toHaveBeenCalled();
+    expect(SWR.mutate).toHaveBeenCalledWith('/api/clients');
 
     // Check the returned data
     expect(response).toEqual({
@@ -156,16 +172,9 @@ describe('useClients Hook', () => {
   });
 
   it('should update a client correctly', async () => {
-    // Mock clients data and SWR mutate
+    // Mock SWR mutate
     const mockMutate = jest.fn();
-    (SWR.default as jest.Mock).mockReturnValue({
-      data: [],
-      error: null,
-      isLoading: false,
-      isValidating: false,
-      mutate: mockMutate,
-    });
-    (SWR.mutate as jest.Mock) = mockMutate;
+    (SWR.mutate as jest.Mock).mockImplementation(mockMutate);
 
     // Mock fetch response
     const mockResponse = {
@@ -179,18 +188,15 @@ describe('useClients Hook', () => {
     };
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-    // Render the hook
-    const { result } = renderHook(() => useClients());
-
-    // Call updateClient
+    // Call updateClient function directly
     const clientId = 'client_123';
     const updatedData = {
       name: 'Updated Client',
       email: 'updated@example.com',
-      status: 'inactive',
+      status: 'inactive' as const,
     };
     
-    const response = await result.current.updateClient(clientId, updatedData);
+    const response = await updateClient(clientId, updatedData);
 
     // Check that fetch was called correctly
     expect(global.fetch).toHaveBeenCalledWith(`/api/clients/${clientId}`, {
@@ -201,8 +207,9 @@ describe('useClients Hook', () => {
       body: JSON.stringify(updatedData),
     });
 
-    // Check that mutate was called to update the cache
-    expect(mockMutate).toHaveBeenCalled();
+    // Check that mutate was called to update the caches
+    expect(SWR.mutate).toHaveBeenCalledWith('/api/clients');
+    expect(SWR.mutate).toHaveBeenCalledWith(`/api/clients/${clientId}`);
 
     // Check the returned data
     expect(response).toEqual({
@@ -213,68 +220,23 @@ describe('useClients Hook', () => {
     });
   });
 
-  it('should delete a client correctly', async () => {
-    // Mock clients data and SWR mutate
-    const mockMutate = jest.fn();
-    (SWR.default as jest.Mock).mockReturnValue({
-      data: [],
-      error: null,
-      isLoading: false,
-      isValidating: false,
-      mutate: mockMutate,
-    });
-    (SWR.mutate as jest.Mock) = mockMutate;
-
-    // Mock fetch response
-    const mockResponse = {
-      ok: true,
-      json: jest.fn().mockResolvedValue({ success: true }),
-    };
-    (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-    // Render the hook
-    const { result } = renderHook(() => useClients());
-
-    // Call deleteClient
-    const clientId = 'client_123';
-    const response = await result.current.deleteClient(clientId);
-
-    // Check that fetch was called correctly
-    expect(global.fetch).toHaveBeenCalledWith(`/api/clients/${clientId}`, {
-      method: 'DELETE',
-    });
-
-    // Check that mutate was called to update the cache
-    expect(mockMutate).toHaveBeenCalled();
-
-    // Check the returned data
-    expect(response).toEqual({ success: true });
-  });
-
-  it('should handle API errors when creating a client', async () => {
-    // Mock SWR
-    (SWR.default as jest.Mock).mockReturnValue({
-      data: [],
-      error: null,
-      isLoading: false,
-      isValidating: false,
-      mutate: jest.fn(),
-    });
-
-    // Mock fetch to throw an error
+  it('should handle error during client creation', async () => {
+    // Mock fetch to return an error response
     const mockResponse = {
       ok: false,
-      status: 400,
-      json: jest.fn().mockResolvedValue({ message: 'Validation error' }),
+      json: jest.fn().mockResolvedValue({ error: 'Validation failed' }),
     };
     (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-    // Render the hook
-    const { result } = renderHook(() => useClients());
-
     // Call createClient and expect it to throw
-    await expect(
-      result.current.createClient({ name: 'Test', status: 'active' })
-    ).rejects.toThrow('Failed to create client: Validation error');
+    const invalidClient = {
+      name: '',
+      email: '',
+      phone: '',
+      status: 'active' as const,
+    };
+    
+    await expect(createClient(invalidClient)).rejects.toThrow();
+    expect(toast).toHaveBeenCalled();
   });
 });

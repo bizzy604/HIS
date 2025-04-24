@@ -4,15 +4,12 @@
 
 import { NextRequest } from 'next/server';
 import { GET, POST } from '@/app/api/clients/route';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentDoctor } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-
-// Regular import for Jest (not a type-only import)
-import { jest } from '@jest/globals';
 
 // Mock dependencies
 jest.mock('@/lib/auth', () => ({
-  getCurrentUser: jest.fn(),
+  getCurrentDoctor: jest.fn()
 }));
 
 jest.mock('@/lib/db', () => ({
@@ -33,9 +30,9 @@ describe('Clients API', () => {
   describe('GET /api/clients', () => {
     it('should return all clients for the current user', async () => {
       // Mock auth
-      (getCurrentUser as jest.MockedFunction<typeof getCurrentUser>).mockResolvedValue({
+      (getCurrentDoctor as jest.Mock).mockImplementation(() => Promise.resolve({
         id: 'doctor_123',
-      });
+      }));
 
       // Mock database response
       const mockClients = [
@@ -46,14 +43,14 @@ describe('Clients API', () => {
           phone: '123-456-7890',
           status: 'active',
           doctorId: 'doctor_123',
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: "2025-04-24T19:04:44.908Z",
+          updatedAt: "2025-04-24T19:04:44.908Z",
           lastVisit: null,
           enrollments: [],
         },
       ];
       
-      (prisma.client.findMany as jest.MockedFunction<any>).mockResolvedValue(mockClients);
+      (prisma.client.findMany as jest.Mock).mockResolvedValue(mockClients);
 
       // Execute the API handler
       const request = new NextRequest('http://localhost/api/clients');
@@ -63,10 +60,13 @@ describe('Clients API', () => {
       // Assertions
       expect(response.status).toBe(200);
       expect(data).toEqual(mockClients);
-      expect(getCurrentUser).toHaveBeenCalledTimes(1);
+      expect(getCurrentDoctor).toHaveBeenCalledTimes(1);
       expect(prisma.client.findMany).toHaveBeenCalledTimes(1);
       expect(prisma.client.findMany).toHaveBeenCalledWith({
         where: { doctorId: 'doctor_123' },
+        orderBy: {
+          createdAt: "desc",
+        },
         include: {
           enrollments: {
             include: {
@@ -79,7 +79,7 @@ describe('Clients API', () => {
 
     it('should return 401 if user is not authenticated', async () => {
       // Mock auth to return null (user not authenticated)
-      (getCurrentUser as jest.MockedFunction<typeof getCurrentUser>).mockResolvedValue(null);
+      (getCurrentDoctor as jest.Mock).mockImplementation(() => Promise.resolve(null));
 
       // Execute the API handler
       const request = new NextRequest('http://localhost/api/clients');
@@ -93,9 +93,9 @@ describe('Clients API', () => {
   describe('POST /api/clients', () => {
     it('should create a new client', async () => {
       // Mock auth
-      (getCurrentUser as jest.MockedFunction<typeof getCurrentUser>).mockResolvedValue({
+      (getCurrentDoctor as jest.Mock).mockImplementation(() => Promise.resolve({
         id: 'doctor_123',
-      });
+      }));
 
       // Mock request body
       const mockClientData = {
@@ -110,12 +110,12 @@ describe('Clients API', () => {
         id: 'client_2',
         ...mockClientData,
         doctorId: 'doctor_123',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: "2025-04-24T19:04:44.965Z",
+        updatedAt: "2025-04-24T19:04:44.965Z",
         lastVisit: null,
       };
       
-      (prisma.client.create as jest.MockedFunction<any>).mockResolvedValue(mockCreatedClient);
+      (prisma.client.create as jest.Mock).mockResolvedValue(mockCreatedClient);
 
       // Create request with JSON body
       const request = new NextRequest('http://localhost/api/clients', {
@@ -129,7 +129,7 @@ describe('Clients API', () => {
       // Assertions
       expect(response.status).toBe(201);
       expect(data).toEqual(mockCreatedClient);
-      expect(getCurrentUser).toHaveBeenCalledTimes(1);
+      expect(getCurrentDoctor).toHaveBeenCalledTimes(1);
       expect(prisma.client.create).toHaveBeenCalledTimes(1);
       expect(prisma.client.create).toHaveBeenCalledWith({
         data: {
@@ -141,7 +141,7 @@ describe('Clients API', () => {
 
     it('should return 401 if user is not authenticated', async () => {
       // Mock auth to return null (user not authenticated)
-      (getCurrentUser as jest.MockedFunction<typeof getCurrentUser>).mockResolvedValue(null);
+      (getCurrentDoctor as jest.Mock).mockImplementation(() => Promise.resolve(null));
 
       // Create request with JSON body
       const request = new NextRequest('http://localhost/api/clients', {
@@ -157,9 +157,9 @@ describe('Clients API', () => {
 
     it('should return 400 if required fields are missing', async () => {
       // Mock auth
-      (getCurrentUser as jest.MockedFunction<typeof getCurrentUser>).mockResolvedValue({
+      (getCurrentDoctor as jest.Mock).mockImplementation(() => Promise.resolve({
         id: 'doctor_123',
-      });
+      }));
 
       // Missing required field (name)
       const mockInvalidData = {

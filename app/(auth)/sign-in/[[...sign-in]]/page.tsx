@@ -26,12 +26,6 @@ export default function SignInPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-r from-background to-muted">
       <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
         <SignIn
-          appearance={{
-            elements: {
-              rootBox: "mx-auto w-full",
-              card: "shadow-none p-0",
-            },
-          }}
           redirectUrl="/dashboard"
         />
       </div>

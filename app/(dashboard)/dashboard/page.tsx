@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { Activity, Calendar, ChevronRight, LayoutDashboard, Users } from "lucide-react"
+import { getCurrentDoctor } from "@/lib/auth"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -9,12 +10,18 @@ import { EnrollmentChart } from "@/components/enrollment-chart"
 import { RecentActivity } from "@/components/recent-activity"
 import { DashboardStats } from "@/components/dashboard-stats"
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  // Fetch the current doctor using our custom auth function
+  const doctor = await getCurrentDoctor();
+  
+  // Get the doctor's name or use a default
+  const displayName: string = doctor?.name || "Doctor";
+  
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, Dr. Smith. Here's an overview of your practice.</p>
+        <p className="text-muted-foreground">Welcome back, Dr. {displayName}. Here's an overview of your practice.</p>
       </div>
       <Suspense fallback={<DashboardStatsSkeleton />}>
         <DashboardStats />
