@@ -16,6 +16,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# Prisma - DO NOT ignore these files
+!prisma/schema.prisma
+# Include necessary prisma files but exclude large binary files
+/lib/generated/prisma/query_engine-*.dll.node
+
 # env files
 .env*
 
