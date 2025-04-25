@@ -2,19 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { canAccessClient, getCurrentDoctor } from "@/lib/auth";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
+type Params = { params: { id: string } };
 
-// GET /api/clients/[id] - Get a specific client
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+// GET /api/clients/[id] - Get a single client
+export async function GET(request: NextRequest, context: Params) {
   try {
-    const { id } = params;
+    const id = context.params.id;
     
     if (!await canAccessClient(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -46,12 +39,9 @@ export async function GET(
 }
 
 // PUT /api/clients/[id] - Update a client
-export async function PUT(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function PUT(request: NextRequest, context: Params) {
   try {
-    const { id } = params;
+    const id = context.params.id;
     
     if (!await canAccessClient(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -90,12 +80,9 @@ export async function PUT(
 }
 
 // DELETE /api/clients/[id] - Delete a client
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function DELETE(request: NextRequest, context: Params) {
   try {
-    const { id } = params;
+    const id = context.params.id;
     
     if (!await canAccessClient(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

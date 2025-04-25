@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { canAccessClient, canAccessProgram, getCurrentDoctor } from "@/lib/auth";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // Helper to check if the current doctor can access an enrollment
 async function canAccessEnrollment(enrollmentId: string) {
   const doctor = await getCurrentDoctor();
@@ -31,7 +25,7 @@ async function canAccessEnrollment(enrollmentId: string) {
 // GET /api/enrollments/[id] - Get a specific enrollment
 export async function GET(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const { id } = params;
@@ -65,7 +59,7 @@ export async function GET(
 // PUT /api/enrollments/[id] - Update an enrollment
 export async function PUT(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const { id } = params;
@@ -103,7 +97,7 @@ export async function PUT(
 // DELETE /api/enrollments/[id] - Delete an enrollment
 export async function DELETE(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const { id } = params;

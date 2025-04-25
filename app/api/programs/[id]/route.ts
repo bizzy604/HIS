@@ -2,16 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { canAccessProgram, getCurrentDoctor } from "@/lib/auth";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 // GET /api/programs/[id] - Get a specific program
 export async function GET(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const { id } = params;
@@ -48,7 +42,7 @@ export async function GET(
 // PUT /api/programs/[id] - Update a program
 export async function PUT(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const { id } = params;
@@ -99,7 +93,7 @@ export async function PUT(
 // DELETE /api/programs/[id] - Delete a program
 export async function DELETE(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
     const { id } = params;
