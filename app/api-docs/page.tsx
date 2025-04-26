@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import 'swagger-ui-react/swagger-ui.css'; // Add this import for Swagger UI styles
 
 // Use dynamic import with SSR disabled to prevent build issues
 const SwaggerUI = dynamic(() => import('swagger-ui-react'), { 
@@ -17,11 +18,26 @@ export default function ApiDocs() {
     // Mark that we're on the client side
     setIsClient(true);
     
+    // Suppress React Strict Mode warnings for Swagger UI
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      // Don't log UNSAFE_componentWillReceiveProps warnings from Swagger UI
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('UNSAFE_componentWillReceiveProps')) {
+        return;
+      }
+      originalConsoleError(...args);
+    };
+    
     // Fetch the OpenAPI specification
     fetch('/api/swagger')
       .then((response) => response.json())
       .then((data) => setSpec(data))
       .catch((error) => console.error('Error loading API spec:', error));
+      
+    // Restore original console.error on cleanup
+    return () => {
+      console.error = originalConsoleError;
+    };
   }, []);
 
   if (!isClient) {

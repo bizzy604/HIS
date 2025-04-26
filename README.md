@@ -2,6 +2,22 @@
 
 A modern, comprehensive hospital information management system built with Next.js and React, featuring client management, program enrollment, and analytics capabilities.
 
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Development](#development)
+- [Building for Production](#building-for-production)
+- [Project Structure](#project-structure)
+- [API Routes](#api-routes)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
+- [Additional Resources](#additional-resources)
+- [Acknowledgments](#acknowledgments)
+
 ## Features
 
 - **Authentication**: Secure user authentication and authorization through Clerk
@@ -163,6 +179,11 @@ npm test -- __tests__/components/client-dialog.test.tsx
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Additional Resources
+
+- [Project Presentation](https://docs.google.com/presentation/d/1k0KZSmtPdvd_yugQWKHj3xVOjZ3JVD4hzCEbLBSY2-A/edit?usp=sharing) - View the PowerPoint presentation for more information about the Hospital Information System
+- [Live Demo](https://his-green.vercel.app) - Visit the live deployment of the Healthcare Information System
 
 ## Acknowledgments
 
