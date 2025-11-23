@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { ChevronDown, Download, Filter, Plus, Search, SlidersHorizontal } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -170,7 +171,14 @@ export default function ClientsPage() {
                     // Show client data
                     filteredClients.map((client) => (
                       <TableRow key={client.id}>
-                        <TableCell className="font-medium">{client.name}</TableCell>
+                        <TableCell className="font-medium">
+                          <Link 
+                            href={`/dashboard/clients/${client.id}`}
+                            className="hover:underline hover:text-primary"
+                          >
+                            {client.name}
+                          </Link>
+                        </TableCell>
                         <TableCell>{client.email || '-'}</TableCell>
                         <TableCell>{client.phone || '-'}</TableCell>
                         <TableCell>

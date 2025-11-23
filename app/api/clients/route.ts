@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentDoctor } from "@/lib/auth";
+import { generateMRN } from "@/lib/generators";
 
 /**
  * @swagger
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, email, phone, status } = body;
+    const { name, email, phone, status, dateOfBirth, gender, bloodGroup, allergies, address, emergencyContact, insuranceProvider, policyNumber } = body;
 
     // Validate required fields
     if (!name) {
@@ -144,12 +145,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate unique MRN
+    const mrn = await generateMRN();
+
     const client = await prisma.client.create({
       data: {
+        mrn,
         name,
         email,
         phone,
         status: status || "active",
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        gender,
+        bloodGroup,
+        allergies: allergies || [],
+        address,
+        emergencyContact,
+        insuranceProvider,
+        policyNumber,
         doctorId: doctor.id,
       },
     });

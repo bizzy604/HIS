@@ -6,7 +6,7 @@ import { useState } from "react"
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Calendar, LayoutDashboard, Menu, Users, X } from "lucide-react"
+import { BarChart3, Calendar, LayoutDashboard, Menu, Users, X, ClipboardList, Pill, FlaskConical, Receipt } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -24,9 +24,34 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {
+    name: "Queue",
+    href: "/dashboard/queue",
+    icon: ClipboardList,
+  },
+  {
+    name: "Appointments",
+    href: "/dashboard/appointments",
+    icon: Calendar,
+  },
+  {
     name: "Clients",
     href: "/dashboard/clients",
     icon: Users,
+  },
+  {
+    name: "Pharmacy",
+    href: "/dashboard/pharmacy",
+    icon: Pill,
+  },
+  {
+    name: "Laboratory",
+    href: "/dashboard/laboratory",
+    icon: FlaskConical,
+  },
+  {
+    name: "Billing",
+    href: "/dashboard/billing",
+    icon: Receipt,
   },
   {
     name: "Programs",
