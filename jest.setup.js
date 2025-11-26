@@ -29,3 +29,9 @@ jest.mock('swr', () => ({
   default: jest.fn(),
   mutate: jest.fn(),
 }));
+
+// Mock Clerk server helpers to avoid importing ESM runtime in tests
+jest.mock('@clerk/nextjs/server', () => ({
+  __esModule: true,
+  currentUser: jest.fn().mockResolvedValue(null),
+}));

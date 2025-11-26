@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { format } from "date-fns"
+import { exportToCSV } from "@/lib/csv-export"
 
 export default function ProgramsPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -47,6 +48,20 @@ export default function ProgramsPage() {
 
     return matchesSearch && matchesStatus
   })
+
+  const handleExport = () => {
+    const exportData = filteredPrograms.map(program => ({
+      Name: program.name,
+      Description: program.description || '',
+      'Enrolled Clients': program.enrolledClients,
+      Status: program.status,
+      'Start Date': program.startDateFormatted,
+      'End Date': program.endDateFormatted,
+      Duration: program.duration || '',
+      Cost: program.cost || '',
+    }));
+    exportToCSV(exportData, 'programs');
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -121,7 +136,7 @@ export default function ProgramsPage() {
                   <SlidersHorizontal className="h-4 w-4" />
                   View
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button variant="outline" size="sm" className="gap-1" onClick={handleExport}>
                   <Download className="h-4 w-4" />
                   Export
                 </Button>

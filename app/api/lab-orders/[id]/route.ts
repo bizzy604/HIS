@@ -5,16 +5,17 @@ import { getCurrentDoctor } from "@/lib/auth";
 // GET /api/lab-orders/[id]
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const doctor = await getCurrentDoctor();
     if (!doctor) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const labOrder = await prisma.labOrder.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         medicalVisit: {
           include: {
@@ -46,9 +47,10 @@ export async function GET(
 // PATCH /api/lab-orders/[id]
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const doctor = await getCurrentDoctor();
     if (!doctor) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -67,7 +69,7 @@ export async function PATCH(
     // The actual result creation is handled by the /results endpoint
 
     const labOrder = await prisma.labOrder.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         medicalVisit: {
@@ -93,16 +95,17 @@ export async function PATCH(
 // DELETE /api/lab-orders/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const doctor = await getCurrentDoctor();
     if (!doctor) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await prisma.labOrder.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Lab order deleted successfully" });

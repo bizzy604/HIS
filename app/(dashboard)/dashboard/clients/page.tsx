@@ -21,6 +21,7 @@ import { ClientDialog } from "@/components/client-dialog"
 import { useClients } from "@/hooks/use-clients"
 import { Skeleton } from "@/components/ui/skeleton"
 import { format } from "date-fns"
+import { exportToCSV } from "@/lib/csv-export"
 
 export default function ClientsPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -45,6 +46,24 @@ export default function ClientsPage() {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Never';
     return format(new Date(dateString), 'MMM dd, yyyy');
+  };
+
+  const handleExport = () => {
+    const exportData = filteredClients.map(client => ({
+      MRN: client.mrn,
+      Name: client.name,
+      Email: client.email || '',
+      Phone: client.phone || '',
+      'Date of Birth': client.dateOfBirth ? format(new Date(client.dateOfBirth), 'yyyy-MM-dd') : '',
+      Gender: client.gender || '',
+      'Blood Group': client.bloodGroup || '',
+      Programs: client.enrollments?.map(e => e.program.name).join('; ') || 'None',
+      Status: client.status,
+      'Last Visit': formatDate(client.lastVisit),
+      'Emergency Contact': client.emergencyContact || '',
+      'Insurance Provider': client.insuranceProvider || '',
+    }));
+    exportToCSV(exportData, 'clients');
   };
 
   return (
@@ -120,7 +139,7 @@ export default function ClientsPage() {
                   <SlidersHorizontal className="h-4 w-4" />
                   View
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button variant="outline" size="sm" className="gap-1" onClick={handleExport}>
                   <Download className="h-4 w-4" />
                   Export
                 </Button>

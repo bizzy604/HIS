@@ -5,7 +5,7 @@ import { getCurrentDoctor } from "@/lib/auth";
 // GET /api/billing/[id]
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const doctor = await getCurrentDoctor();
@@ -13,20 +13,13 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const billing = await prisma.billing.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         client: true,
-        medicalVisit: {
-          include: {
-            doctor: true,
-          },
-        },
-        items: {
-          orderBy: {
-            createdAt: "asc",
-          },
-        },
+        items: true,
       },
     });
 
@@ -50,7 +43,7 @@ export async function GET(
 // PATCH /api/billing/[id]
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const doctor = await getCurrentDoctor();
@@ -58,6 +51,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const { status, paymentMethod, paidAmount } = body;
 
@@ -77,15 +71,10 @@ export async function PATCH(
     }
 
     const billing = await prisma.billing.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         client: true,
-        medicalVisit: {
-          include: {
-            doctor: true,
-          },
-        },
         items: true,
       },
     });
@@ -103,7 +92,7 @@ export async function PATCH(
 // DELETE /api/billing/[id]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const doctor = await getCurrentDoctor();
@@ -111,8 +100,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     await prisma.billing.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Bill deleted successfully" });

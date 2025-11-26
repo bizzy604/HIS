@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Clock, Plus, RefreshCw } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, RefreshCw, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/csv-export";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -117,6 +118,20 @@ export default function AppointmentsPage() {
     }
   };
 
+  const handleExport = () => {
+    const exportData = appointments.map(appointment => ({
+      'Time': format(new Date(appointment.scheduledAt), "h:mm a"),
+      'Patient': appointment.client.name,
+      'MRN': appointment.client.mrn,
+      'Phone': appointment.client.phone || '',
+      'Type': appointment.appointmentType.replace('_', ' '),
+      'Status': appointment.status.replace('_', ' '),
+      'Notes': appointment.notes || '',
+    }));
+    const dateStr = format(date, 'yyyy-MM-dd');
+    exportToCSV(exportData, `appointments_${dateStr}`);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -141,6 +156,10 @@ export default function AppointmentsPage() {
           </Popover>
           <Button variant="outline" size="icon" onClick={fetchAppointments}>
             <RefreshCw className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
           </Button>
         </div>
         <Button onClick={() => setDialogOpen(true)}>

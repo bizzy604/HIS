@@ -25,10 +25,10 @@ async function canAccessEnrollment(enrollmentId: string) {
 // GET /api/enrollments/[id] - Get a specific enrollment
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     if (!await canAccessEnrollment(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -59,10 +59,10 @@ export async function GET(
 // PUT /api/enrollments/[id] - Update an enrollment
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     if (!await canAccessEnrollment(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -97,10 +97,10 @@ export async function PUT(
 // DELETE /api/enrollments/[id] - Delete an enrollment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     if (!await canAccessEnrollment(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

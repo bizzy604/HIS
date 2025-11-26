@@ -46,6 +46,7 @@ export function BillingDialog({
   onSuccess,
 }: BillingDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingClients, setIsLoadingClients] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
   
   const form = useForm({
@@ -76,14 +77,23 @@ export function BillingDialog({
   }, [open]);
 
   const fetchClients = async () => {
+    setIsLoadingClients(true);
     try {
       const response = await fetch("/api/clients");
       if (response.ok) {
         const data = await response.json();
         setClients(data);
+        if (data.length === 0) {
+          toast.error("No patients found. Please add patients first.");
+        }
+      } else {
+        toast.error("Failed to load patients");
       }
     } catch (error) {
       console.error("Error fetching clients:", error);
+      toast.error("Error loading patients");
+    } finally {
+      setIsLoadingClients(false);
     }
   };
 
@@ -139,18 +149,28 @@ export function BillingDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Patient*</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isLoadingClients}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select patient" />
+                        <SelectValue placeholder={isLoadingClients ? "Loading patients..." : "Select patient"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.firstName} {client.lastName} - {client.mrn}
+                      {isLoadingClients ? (
+                        <SelectItem value="loading" disabled>
+                          Loading...
                         </SelectItem>
-                      ))}
+                      ) : clients.length === 0 ? (
+                        <SelectItem value="no-clients" disabled>
+                          No patients available
+                        </SelectItem>
+                      ) : (
+                        clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name} - {client.mrn}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

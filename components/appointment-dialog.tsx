@@ -50,6 +50,7 @@ export function AppointmentDialog({
   onSuccess,
 }: AppointmentDialogProps) {
   const [clients, setClients] = useState<Client[]>([]);
+  const [isLoadingClients, setIsLoadingClients] = useState(false);
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [appointmentType, setAppointmentType] = useState<string>("OPD");
   const [date, setDate] = useState<Date>();
@@ -64,14 +65,23 @@ export function AppointmentDialog({
   }, [open]);
 
   const fetchClients = async () => {
+    setIsLoadingClients(true);
     try {
       const response = await fetch("/api/clients");
       if (response.ok) {
         const data = await response.json();
         setClients(data);
+        if (data.length === 0) {
+          toast.info("No patients found. Please add patients first.");
+        }
+      } else {
+        toast.error("Failed to load patients");
       }
     } catch (error) {
       console.error("Error fetching clients:", error);
+      toast.error("Error loading patients");
+    } finally {
+      setIsLoadingClients(false);
     }
   };
 
@@ -140,16 +150,26 @@ export function AppointmentDialog({
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="client">Patient *</Label>
-              <Select value={selectedClient} onValueChange={setSelectedClient}>
+              <Select value={selectedClient} onValueChange={setSelectedClient} disabled={isLoadingClients}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a patient" />
+                  <SelectValue placeholder={isLoadingClients ? "Loading patients..." : "Select a patient"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name} ({client.mrn})
+                  {isLoadingClients ? (
+                    <SelectItem value="loading" disabled>
+                      Loading...
                     </SelectItem>
-                  ))}
+                  ) : clients.length === 0 ? (
+                    <SelectItem value="no-clients" disabled>
+                      No patients available
+                    </SelectItem>
+                  ) : (
+                    clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name} ({client.mrn})
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

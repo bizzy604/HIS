@@ -35,8 +35,7 @@ export async function GET(request: NextRequest) {
               select: {
                 id: true,
                 mrn: true,
-                firstName: true,
-                lastName: true,
+                name: true,
               },
             },
             doctor: {

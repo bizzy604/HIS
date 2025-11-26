@@ -5,7 +5,7 @@ import { getCurrentDoctor } from "@/lib/auth";
 // GET /api/appointments/[id] - Get a specific appointment
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const doctor = await getCurrentDoctor();
@@ -13,9 +13,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const appointment = await prisma.appointment.findFirst({
       where: {
-        id: params.id,
+        id,
         doctorId: doctor.id,
       },
       include: {
@@ -61,7 +63,7 @@ export async function GET(
 // PATCH /api/appointments/[id] - Update appointment status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const doctor = await getCurrentDoctor();
@@ -69,13 +71,14 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const { status, notes } = body;
 
     // Verify appointment belongs to doctor
     const existingAppointment = await prisma.appointment.findFirst({
       where: {
-        id: params.id,
+        id,
         doctorId: doctor.id,
       },
     });
@@ -93,7 +96,7 @@ export async function PATCH(
     if (status === "COMPLETED") updateData.completedAt = new Date();
 
     const appointment = await prisma.appointment.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         client: true,
@@ -113,7 +116,7 @@ export async function PATCH(
 // DELETE /api/appointments/[id] - Cancel an appointment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const doctor = await getCurrentDoctor();
@@ -121,10 +124,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     // Verify appointment belongs to doctor
     const existingAppointment = await prisma.appointment.findFirst({
       where: {
-        id: params.id,
+        id,
         doctorId: doctor.id,
       },
     });
@@ -137,7 +142,7 @@ export async function DELETE(
     }
 
     await prisma.appointment.update({
-      where: { id: params.id },
+      where: { id },
       data: { status: "CANCELLED" },
     });
 

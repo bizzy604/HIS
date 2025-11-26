@@ -26,6 +26,7 @@ import { ClientStatusChart } from "@/components/client-status-chart"
 import { MonthlyActivityChart } from "@/components/monthly-activity-chart"
 import { useAnalytics } from "@/hooks/use-analytics"
 import { usePrograms } from "@/hooks/use-programs"
+import { exportToCSV } from "@/lib/csv-export"
 
 export default function AnalyticsPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
@@ -52,6 +53,45 @@ export default function AnalyticsPage() {
       setStartDate(format(date, "yyyy-MM-dd"))
     }
   }, [date])
+
+  const handleExport = () => {
+    if (!analytics) return;
+    
+    const reportData = [
+      { Metric: 'Total Clients', Value: analytics.counts.totalClients },
+      { Metric: 'Active Clients', Value: analytics.counts.activeClients },
+      { Metric: 'Total Programs', Value: analytics.counts.totalPrograms },
+      { Metric: 'Active Programs', Value: analytics.counts.activePrograms },
+      { Metric: 'Total Enrollments', Value: analytics.counts.totalEnrollments },
+      { Metric: 'Enrollment Rate', Value: formatPercentage(analytics.enrollmentRate) },
+      { Metric: 'Completion Rate', Value: formatPercentage(analytics.completionRate) },
+    ];
+
+    // Add monthly enrollment data
+    const monthlyData = analytics.monthlyEnrollments?.map(item => ({
+      Month: item.month,
+      Enrollments: item.enrollments,
+    })) || [];
+
+    // Add program distribution
+    const programData = analytics.programDistribution?.map(item => ({
+      Program: item.name,
+      'Enrolled Clients': item.value,
+    })) || [];
+
+    // Combine all data
+    const allData = [
+      ...reportData,
+      { Metric: '', Value: '' }, // Empty row
+      { Metric: 'Monthly Enrollments', Value: '' },
+      ...monthlyData.map(d => ({ Metric: d.Month, Value: d.Enrollments })),
+      { Metric: '', Value: '' }, // Empty row
+      { Metric: 'Program Distribution', Value: '' },
+      ...programData.map(d => ({ Metric: d.Program, Value: d['Enrolled Clients'] })),
+    ];
+
+    exportToCSV(allData, 'analytics_report');
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -111,7 +151,7 @@ export default function AnalyticsPage() {
           </DropdownMenu>
         </div>
         <div className="ml-auto">
-          <Button variant="outline" className="gap-1">
+          <Button variant="outline" className="gap-1" onClick={handleExport}>
             <Download className="h-4 w-4" />
             Export Report
           </Button>

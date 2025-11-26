@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { canAccessClient, getCurrentDoctor } from "@/lib/auth";
 
-type Params = { params: { id: string } };
+type Params = { params: Promise<{ id: string }> };
 
 // GET /api/clients/[id] - Get a single client
 export async function GET(request: NextRequest, context: Params) {
   try {
-    const id = context.params.id;
+    const { id } = await context.params;
     
     if (!await canAccessClient(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest, context: Params) {
 // PUT /api/clients/[id] - Update a client
 export async function PUT(request: NextRequest, context: Params) {
   try {
-    const id = context.params.id;
+    const { id } = await context.params;
     
     if (!await canAccessClient(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -82,7 +82,7 @@ export async function PUT(request: NextRequest, context: Params) {
 // DELETE /api/clients/[id] - Delete a client
 export async function DELETE(request: NextRequest, context: Params) {
   try {
-    const id = context.params.id;
+    const { id } = await context.params;
     
     if (!await canAccessClient(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -41,8 +41,7 @@ interface PaymentDialogProps {
     status: string;
     paidAmount?: number;
     client: {
-      firstName: string;
-      lastName: string;
+      name: string;
       mrn: string;
     };
     items: {
@@ -51,9 +50,6 @@ interface PaymentDialogProps {
       unitPrice: number;
       totalPrice: number;
     }[];
-    subtotal: number;
-    discount: number;
-    tax: number;
   };
   onSuccess: () => void;
 }
@@ -137,7 +133,7 @@ export function PaymentDialog({
           <div className="rounded-lg border p-4">
             <h3 className="font-semibold text-sm mb-2">Patient</h3>
             <p className="text-sm">
-              {billing.client.firstName} {billing.client.lastName} - {billing.client.mrn}
+              {billing.client.name} - {billing.client.mrn}
             </p>
           </div>
 
@@ -153,25 +149,6 @@ export function PaymentDialog({
                   <span className="font-medium">${item.totalPrice.toFixed(2)}</span>
                 </div>
               ))}
-              
-              <Separator className="my-2" />
-              
-              <div className="flex justify-between text-sm">
-                <span>Subtotal</span>
-                <span>${billing.subtotal.toFixed(2)}</span>
-              </div>
-              
-              {billing.discount > 0 && (
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Discount</span>
-                  <span>-${billing.discount.toFixed(2)}</span>
-                </div>
-              )}
-              
-              <div className="flex justify-between text-sm">
-                <span>Tax (15%)</span>
-                <span>${billing.tax.toFixed(2)}</span>
-              </div>
               
               <Separator className="my-2" />
               

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Plus, Search, Clock, CheckCircle, AlertCircle, FlaskConical } from "lucide-react";
+import { Plus, Search, Clock, CheckCircle, AlertCircle, FlaskConical, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/csv-export";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -143,6 +144,24 @@ export default function LaboratoryPage() {
     return age;
   };
 
+  const handleExport = () => {
+    const exportData = filteredOrders.map(order => ({
+      'Patient': order.medicalVisit.client.name,
+      'MRN': order.medicalVisit.client.mrn,
+      'Age': calculateAge(order.medicalVisit.client.dateOfBirth),
+      'Test Name': order.testName,
+      'Category': order.testCategory || '',
+      'Priority': order.priority,
+      'Status': order.status,
+      'Ordered By': order.medicalVisit.doctor.name,
+      'Specialization': order.medicalVisit.doctor.specialization || '',
+      'Ordered Date': new Date(order.orderedAt).toLocaleDateString(),
+      'Completed Date': order.completedAt ? new Date(order.completedAt).toLocaleDateString() : '',
+      'Notes': order.notes || '',
+    }));
+    exportToCSV(exportData, 'lab_orders');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -213,15 +232,21 @@ export default function LaboratoryPage() {
                 <CardTitle>Lab Orders</CardTitle>
                 <CardDescription>View and manage laboratory orders</CardDescription>
               </div>
-              <div className="w-72">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by test, MRN, or patient..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
-                  />
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={handleExport}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+                <div className="w-72">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by test, MRN, or patient..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

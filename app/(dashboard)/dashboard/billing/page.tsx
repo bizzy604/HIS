@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Plus, Search, DollarSign, FileText, CheckCircle, Clock } from "lucide-react";
+import { Plus, Search, DollarSign, FileText, CheckCircle, Clock, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/csv-export";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,28 +30,19 @@ import { PaymentDialog } from "@/components/payment-dialog";
 type Billing = {
   id: string;
   billNumber: string;
-  subtotal: number;
-  discount: number;
-  tax: number;
   totalAmount: number;
   status: string;
   paymentMethod?: string;
   paidAmount?: number;
   paidAt?: string;
-  createdAt: string;
+  billedAt: string;
+  insuranceClaim: boolean;
+  notes?: string;
   client: {
     id: string;
     mrn: string;
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-  };
-  medicalVisit?: {
-    id: string;
-    doctor: {
-      name: string;
-      specialization?: string;
-    };
+    name: string;
+    dateOfBirth?: string;
   };
   items: {
     id: string;
@@ -93,9 +85,7 @@ export default function BillingPage() {
     (bill) =>
       bill.billNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       bill.client.mrn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${bill.client.firstName} ${bill.client.lastName}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+      bill.client.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const pendingBills = filteredBills.filter(
@@ -106,6 +96,22 @@ export default function BillingPage() {
 
   const totalRevenue = paidBills.reduce((sum, bill) => sum + bill.totalAmount, 0);
   const totalPending = pendingBills.reduce((sum, bill) => sum + bill.totalAmount, 0);
+
+  const handleExport = () => {
+    const exportData = filteredBills.map(bill => ({
+      'Bill Number': bill.billNumber,
+      'Patient Name': bill.client.name,
+      'MRN': bill.client.mrn,
+      'Date': new Date(bill.billedAt).toLocaleDateString(),
+      'Total Amount': bill.totalAmount.toFixed(2),
+      'Paid Amount': bill.paidAmount?.toFixed(2) || '0.00',
+      'Status': bill.status,
+      'Payment Method': bill.paymentMethod || '',
+      'Insurance Claim': bill.insuranceClaim ? 'Yes' : 'No',
+      'Notes': bill.notes || '',
+    }));
+    exportToCSV(exportData, 'billing');
+  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig: any = {
@@ -186,10 +192,16 @@ export default function BillingPage() {
             <TabsTrigger value="paid">Paid ({paidBills.length})</TabsTrigger>
             <TabsTrigger value="all">All Bills ({bills.length})</TabsTrigger>
           </TabsList>
-          <Button onClick={() => setBillingDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Bill
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            <Button onClick={() => setBillingDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Bill
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -323,12 +335,12 @@ function BillingTable({
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-medium">
-                      {bill.client.firstName} {bill.client.lastName}
+                      {bill.client.name}
                     </span>
                     <span className="text-xs text-muted-foreground">{bill.client.mrn}</span>
                   </div>
                 </TableCell>
-                <TableCell>{new Date(bill.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(bill.billedAt).toLocaleDateString()}</TableCell>
                 <TableCell className="font-semibold">${bill.totalAmount.toFixed(2)}</TableCell>
                 <TableCell>{getStatusBadge(bill.status)}</TableCell>
                 <TableCell>{bill.paymentMethod || "-"}</TableCell>

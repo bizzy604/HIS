@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Search, AlertTriangle, Package, TrendingDown } from "lucide-react";
+import { Plus, Search, AlertTriangle, Package, TrendingDown, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/csv-export";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -103,6 +104,22 @@ export default function PharmacyPage() {
     return <Badge variant="outline">In Stock</Badge>;
   };
 
+  const handleExport = () => {
+    const exportData = filteredMedicines.map(med => ({
+      'Name': med.name,
+      'Generic Name': med.genericName || '',
+      'Category': med.category || '',
+      'Manufacturer': med.manufacturer || '',
+      'Stock Quantity': med.stockQuantity,
+      'Unit': med.unit,
+      'Reorder Level': med.reorderLevel,
+      'Unit Price': med.unitPrice.toFixed(2),
+      'Total Batches': med.batches.length,
+      'Stock Status': med.stockQuantity === 0 ? 'Out of Stock' : med.stockQuantity <= med.reorderLevel ? 'Low Stock' : 'In Stock',
+    }));
+    exportToCSV(exportData, 'pharmacy_inventory');
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -169,15 +186,21 @@ export default function PharmacyPage() {
                   <CardTitle>Medicine Inventory</CardTitle>
                   <CardDescription>Complete list of all medicines</CardDescription>
                 </div>
-                <div className="w-72">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search medicines..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-8"
-                    />
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={handleExport}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                  <div className="w-72">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search medicines..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

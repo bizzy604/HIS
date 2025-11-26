@@ -5,10 +5,10 @@ import { canAccessProgram, getCurrentDoctor } from "@/lib/auth";
 // GET /api/programs/[id] - Get a specific program
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     if (!await canAccessProgram(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -42,10 +42,10 @@ export async function GET(
 // PUT /api/programs/[id] - Update a program
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     if (!await canAccessProgram(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -93,10 +93,10 @@ export async function PUT(
 // DELETE /api/programs/[id] - Delete a program
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     if (!await canAccessProgram(id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

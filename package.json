@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
+    "test:unit": "jest",
+    "test:e2e": "jest --config jest.config.e2e.js --runInBand",
     "seed": "tsx prisma/seed.ts"
   },
   "prisma": {

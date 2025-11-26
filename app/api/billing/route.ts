@@ -32,30 +32,14 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             mrn: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             dateOfBirth: true,
           },
         },
-        medicalVisit: {
-          include: {
-            doctor: {
-              select: {
-                id: true,
-                name: true,
-                specialization: true,
-              },
-            },
-          },
-        },
-        items: {
-          orderBy: {
-            createdAt: "asc",
-          },
-        },
+        items: true,
       },
       orderBy: {
-        createdAt: "desc",
+        billedAt: "desc",
       },
     });
 
@@ -80,9 +64,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       clientId,
-      medicalVisitId,
       items,
-      discount,
+      discount = 0,
       notes,
     } = body;
 
@@ -108,10 +91,6 @@ export async function POST(request: NextRequest) {
       data: {
         billNumber,
         clientId,
-        medicalVisitId: medicalVisitId || undefined,
-        subtotal,
-        discount: discountAmount,
-        tax: taxAmount,
         totalAmount,
         status: "PENDING",
         notes,
@@ -121,17 +100,12 @@ export async function POST(request: NextRequest) {
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             totalPrice: item.unitPrice * item.quantity,
-            itemType: item.itemType || "SERVICE",
+            itemType: item.itemType || "CONSULTATION",
           })),
         },
       },
       include: {
         client: true,
-        medicalVisit: {
-          include: {
-            doctor: true,
-          },
-        },
         items: true,
       },
     });

@@ -5,9 +5,10 @@ import { getCurrentDoctor } from "@/lib/auth";
 // GET /api/medical-visits/[id] - Get a specific medical visit
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const doctor = await getCurrentDoctor();
     if (!doctor) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -15,7 +16,7 @@ export async function GET(
 
     const visit = await prisma.medicalVisit.findFirst({
       where: {
-        id: params.id,
+        id,
         doctorId: doctor.id,
       },
       include: {
@@ -58,9 +59,10 @@ export async function GET(
 // PATCH /api/medical-visits/[id] - Update a medical visit
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const doctor = await getCurrentDoctor();
     if (!doctor) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -71,7 +73,7 @@ export async function PATCH(
 
     const existingVisit = await prisma.medicalVisit.findFirst({
       where: {
-        id: params.id,
+        id,
         doctorId: doctor.id,
       },
     });
@@ -84,7 +86,7 @@ export async function PATCH(
     }
 
     const visit = await prisma.medicalVisit.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         chiefComplaint,
         examination,
