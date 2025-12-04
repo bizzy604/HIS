@@ -55,6 +55,7 @@ export function AppointmentDialog({
   const [appointmentType, setAppointmentType] = useState<string>("OPD");
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState<string>("09:00");
+  const [duration, setDuration] = useState<string>("30");
   const [notes, setNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -108,6 +109,7 @@ export function AppointmentDialog({
           clientId: selectedClient,
           appointmentType,
           scheduledAt: scheduledDateTime.toISOString(),
+          duration: parseInt(duration),
           notes,
         }),
       });
@@ -134,6 +136,7 @@ export function AppointmentDialog({
     setAppointmentType("OPD");
     setDate(undefined);
     setTime("09:00");
+    setDuration("30");
     setNotes("");
   };
 
@@ -222,6 +225,23 @@ export function AppointmentDialog({
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
               />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Select value={duration} onValueChange={setDuration}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="15">15 minutes</SelectItem>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="45">45 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="90">1.5 hours</SelectItem>
+                  <SelectItem value="120">2 hours</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-2">

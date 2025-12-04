@@ -4,7 +4,7 @@ import { getCurrentDoctor } from "@/lib/auth";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const doctor = await getCurrentDoctor();
@@ -12,6 +12,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const {
       parameter,
@@ -21,32 +22,78 @@ export async function POST(
       isAbnormal,
       notes,
       verifiedBy,
+      resultsData,
+      interpretation,
+      performedBy,
     } = body;
 
-    if (!parameter || !value) {
+    // Handle structured results data (for compatibility with different result formats)
+    if (resultsData && typeof resultsData === 'string') {
+      // If resultsData is a JSON string, parse it and create multiple results
+      try {
+        const parsedData = JSON.parse(resultsData);
+        if (typeof parsedData === 'object') {
+          const results = await Promise.all(
+            Object.entries(parsedData).map(([param, val]) =>
+              prisma.labResult.create({
+                data: {
+                  labOrderId: id,
+                  parameter: param,
+                  value: String(val),
+                  unit: unit || "",
+                  referenceRange: referenceRange || "",
+                  isAbnormal: isAbnormal || false,
+                  notes: interpretation || notes || "",
+                  verifiedBy: performedBy || verifiedBy || doctor.name,
+                  verifiedAt: new Date(),
+                },
+              })
+            )
+          );
+
+          await prisma.labOrder.update({
+            where: { id },
+            data: { 
+              status: "COMPLETED", 
+              completedAt: new Date() 
+            },
+          });
+
+          return NextResponse.json(
+            { message: "Lab results added successfully", results },
+            { status: 201 }
+          );
+        }
+      } catch (e) {
+        // If parsing fails, treat as single text result
+      }
+    }
+
+    // Handle single parameter result
+    if (!parameter && !value && !resultsData) {
       return NextResponse.json(
-        { error: "Parameter and value are required" },
+        { error: "Parameter and value, or resultsData are required" },
         { status: 400 }
       );
     }
 
     const labResult = await prisma.labResult.create({
       data: {
-        labOrderId: params.id,
-        parameter,
-        value,
-        unit,
-        referenceRange,
+        labOrderId: id,
+        parameter: parameter || "Result",
+        value: value || resultsData || "",
+        unit: unit || "",
+        referenceRange: referenceRange || "",
         isAbnormal: isAbnormal || false,
-        notes,
-        verifiedBy,
-        verifiedAt: verifiedBy ? new Date() : null,
+        notes: interpretation || notes || "",
+        verifiedBy: performedBy || verifiedBy || doctor.name,
+        verifiedAt: new Date(),
       },
     });
 
     // Update lab order status to COMPLETED
     await prisma.labOrder.update({
-      where: { id: params.id },
+      where: { id },
       data: { 
         status: "COMPLETED", 
         completedAt: new Date() 

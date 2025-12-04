@@ -40,7 +40,7 @@ export default function QueuePage() {
     setIsLoading(true);
     try {
       const today = format(new Date(), "yyyy-MM-dd");
-      const response = await fetch(`/api/appointments?date=${today}&status=WAITING,IN_PROGRESS`);
+      const response = await fetch(`/api/appointments?date=${today}&status=SCHEDULED,WAITING,IN_PROGRESS`);
       if (response.ok) {
         const data = await response.json();
         setAppointments(data);
@@ -89,7 +89,7 @@ export default function QueuePage() {
     );
   };
 
-  const waitingAppointments = appointments.filter(a => a.status === "WAITING");
+  const waitingAppointments = appointments.filter(a => a.status === "WAITING" || a.status === "SCHEDULED");
   const inProgressAppointments = appointments.filter(a => a.status === "IN_PROGRESS");
 
   return (

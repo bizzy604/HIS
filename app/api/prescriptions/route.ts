@@ -101,6 +101,8 @@ export async function POST(request: NextRequest) {
     const prescription = await prisma.prescription.create({
       data: {
         medicalVisitId,
+        doctorId: doctor.id,
+        status: "PENDING",
         notes,
         items: {
           create: items.map((item: any) => ({

@@ -30,7 +30,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) {
-      where.status = status;
+      // Handle multiple statuses separated by comma
+      const statuses = status.split(',').map(s => s.trim());
+      where.status = {
+        in: statuses
+      };
     }
 
     const appointments = await prisma.appointment.findMany({
@@ -63,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { clientId, appointmentType, scheduledAt, notes } = body;
+    const { clientId, appointmentType, scheduledAt, duration, notes } = body;
 
     // Validate required fields
     if (!clientId) {
@@ -102,6 +106,7 @@ export async function POST(request: NextRequest) {
         appointmentType: appointmentType || "OPD",
         status: "SCHEDULED",
         scheduledAt: new Date(scheduledAt),
+        duration: duration ? parseInt(duration) : null,
         notes,
       },
       include: {

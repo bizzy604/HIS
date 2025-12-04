@@ -18,7 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Client, ClientData, createClient, updateClient } from "@/hooks/use-clients"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface ClientDialogProps {
   open: boolean
@@ -36,6 +36,14 @@ const formSchema = z.object({
     message: "Please enter a valid email address.",
   }).optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
+  dateOfBirth: z.string().optional().or(z.literal('')),
+  gender: z.string().optional().or(z.literal('')),
+  bloodGroup: z.string().optional().or(z.literal('')),
+  allergies: z.string().optional().or(z.literal('')),
+  address: z.string().optional().or(z.literal('')),
+  emergencyContact: z.string().optional().or(z.literal('')),
+  insuranceProvider: z.string().optional().or(z.literal('')),
+  policyNumber: z.string().optional().or(z.literal('')),
   status: z.enum(["active", "inactive"]),
 })
 
@@ -50,6 +58,14 @@ export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogP
       name: client?.name || "",
       email: client?.email || "",
       phone: client?.phone || "",
+      dateOfBirth: client?.dateOfBirth ? new Date(client.dateOfBirth).toISOString().split('T')[0] : "",
+      gender: (client as any)?.gender || "",
+      bloodGroup: (client as any)?.bloodGroup || "",
+      allergies: (client as any)?.allergies?.join(", ") || "",
+      address: (client as any)?.address || "",
+      emergencyContact: (client as any)?.emergencyContact || "",
+      insuranceProvider: (client as any)?.insuranceProvider || "",
+      policyNumber: (client as any)?.policyNumber || "",
       status: (client?.status as "active" | "inactive") || "active",
     },
   })
@@ -62,23 +78,25 @@ export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogP
         name: values.name,
         email: values.email || "",
         phone: values.phone || "",
+        dateOfBirth: values.dateOfBirth || undefined,
+        gender: values.gender || undefined,
+        bloodGroup: values.bloodGroup || undefined,
+        allergies: values.allergies ? values.allergies.split(",").map(a => a.trim()).filter(Boolean) : undefined,
+        address: values.address || undefined,
+        emergencyContact: values.emergencyContact || undefined,
+        insuranceProvider: values.insuranceProvider || undefined,
+        policyNumber: values.policyNumber || undefined,
         status: values.status
       };
 
       if (mode === "add") {
         // Create new client
         await createClient(clientData);
-        toast({
-          title: "Success",
-          description: "Client has been created successfully",
-        });
+        toast.success("Client created successfully");
       } else if (mode === "edit" && client) {
         // Update existing client
         await updateClient(client.id, clientData);
-        toast({
-          title: "Success",
-          description: "Client has been updated successfully",
-        });
+        toast.success("Client updated successfully");
       }
 
       // Reset form and close dialog
@@ -86,7 +104,7 @@ export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogP
       onOpenChange(false);
     } catch (error) {
       console.error("Error submitting client form:", error);
-      // Error handling is done in the API functions
+      toast.error(error instanceof Error ? error.message : "Failed to save client");
     } finally {
       setIsSubmitting(false);
     }
@@ -94,7 +112,7 @@ export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{mode === "add" ? "Add Client" : "Edit Client"}</DialogTitle>
           <DialogDescription>
@@ -105,66 +123,209 @@ export function ClientDialog({ open, onOpenChange, mode, client }: ClientDialogP
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter client name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter client email" type="email" {...field} value={field.value || ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter client phone" {...field} value={field.value || ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Name *</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
+                      <Input placeholder="Enter client name" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="dateOfBirth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date of Birth</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter phone number" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter email" type="email" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="bloodGroup"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Blood Group</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select blood group" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="A+">A+</SelectItem>
+                        <SelectItem value="A-">A-</SelectItem>
+                        <SelectItem value="B+">B+</SelectItem>
+                        <SelectItem value="B-">B-</SelectItem>
+                        <SelectItem value="AB+">AB+</SelectItem>
+                        <SelectItem value="AB-">AB-</SelectItem>
+                        <SelectItem value="O+">O+</SelectItem>
+                        <SelectItem value="O-">O-</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="allergies"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Allergies</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter allergies (comma-separated)" {...field} value={field.value || ''} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter home address" {...field} value={field.value || ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="emergencyContact"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Emergency Contact</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Name and phone number" {...field} value={field.value || ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="insuranceProvider"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Insurance Provider</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Provider name" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="policyNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Policy Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Policy number" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
             <DialogFooter>
               <Button
                 type="button"

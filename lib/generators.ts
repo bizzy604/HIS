@@ -40,7 +40,7 @@ export async function generateBillNumber(): Promise<string> {
   
   const todayCount = await prisma.billing.count({
     where: {
-      createdAt: {
+      billedAt: {
         gte: startOfDay,
         lte: endOfDay,
       },

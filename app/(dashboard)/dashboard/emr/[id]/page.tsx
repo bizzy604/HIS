@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, Save, User, Calendar, FileText, Pill, FlaskConical } from "lucide-react";
+import { ArrowLeft, Save, User, Calendar, FileText, Pill, FlaskConical, ClipboardList, Receipt } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -48,8 +48,9 @@ type Appointment = {
   };
 };
 
-export default function EMRPage({ params }: { params: { id: string } }) {
+export default function EMRPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { id } = use(params);
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -65,12 +66,12 @@ export default function EMRPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     fetchAppointment();
-  }, [params.id]);
+  }, [id]);
 
   const fetchAppointment = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/appointments/${params.id}`);
+      const response = await fetch(`/api/appointments/${id}`);
       if (response.ok) {
         const data = await response.json();
         setAppointment(data);
@@ -119,14 +120,67 @@ export default function EMRPage({ params }: { params: { id: string } }) {
       );
 
       if (response.ok) {
+        await fetchAppointment();
         toast.success("Medical record saved successfully");
-        router.push("/dashboard/queue");
       } else {
         toast.error("Failed to save medical record");
       }
     } catch (error) {
       console.error("Error saving medical visit:", error);
       toast.error("An error occurred while saving");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleComplete = async () => {
+    if (!appointment || !appointment.medicalVisit) {
+      toast.error("Please save the consultation first");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Mark appointment as completed
+      const response = await fetch(`/api/appointments/${appointment.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "COMPLETED" }),
+      });
+
+      if (response.ok) {
+        // Refresh to get latest data
+        await fetchAppointment();
+        
+        // Build routing message
+        let routingMessage = "Consultation completed.";
+        const prescriptions = appointment.medicalVisit.prescriptions || [];
+        const labOrders = appointment.medicalVisit.labOrders || [];
+        
+        if (prescriptions.length > 0 || labOrders.length > 0) {
+          const destinations = [];
+          if (prescriptions.length > 0) {
+            destinations.push(`Pharmacy (${prescriptions.length} prescription${prescriptions.length > 1 ? 's' : ''})`);
+          }
+          if (labOrders.length > 0) {
+            destinations.push(`Laboratory (${labOrders.length} test${labOrders.length > 1 ? 's' : ''})`);
+          }
+          routingMessage += ` Patient should proceed to: ${destinations.join(', ')}, then Billing.`;
+        } else {
+          routingMessage += " Patient should proceed to Billing.";
+        }
+        
+        toast.success(routingMessage, { duration: 5000 });
+        
+        setTimeout(() => {
+          router.push("/dashboard/queue");
+        }, 2000);
+      } else {
+        toast.error("Failed to complete appointment");
+      }
+    } catch (error) {
+      console.error("Error completing appointment:", error);
+      toast.error("An error occurred");
     } finally {
       setIsSaving(false);
     }
@@ -184,30 +238,79 @@ export default function EMRPage({ params }: { params: { id: string } }) {
           </div>
         </div>
         <div className="flex gap-2">
-          {appointment.medicalVisit && (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setLabOrderDialogOpen(true)}
-              >
-                <FlaskConical className="mr-2 h-4 w-4" />
-                Order Lab Test
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setPrescriptionDialogOpen(true)}
-              >
-                <Pill className="mr-2 h-4 w-4" />
-                Prescription
-              </Button>
-            </>
+          {!appointment.medicalVisit && (
+            <p className="text-sm text-muted-foreground self-center mr-2">
+              Save consultation first to add prescriptions/lab orders
+            </p>
           )}
-          <Button onClick={handleSave} disabled={isSaving} size="lg">
+          <Button
+            variant="outline"
+            onClick={() => setLabOrderDialogOpen(true)}
+            disabled={!appointment.medicalVisit}
+          >
+            <FlaskConical className="mr-2 h-4 w-4" />
+            Order Lab Test
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setPrescriptionDialogOpen(true)}
+            disabled={!appointment.medicalVisit}
+          >
+            <Pill className="mr-2 h-4 w-4" />
+            Prescription
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={handleSave} 
+            disabled={isSaving}
+          >
             <Save className="mr-2 h-4 w-4" />
-            {isSaving ? "Saving..." : "Save & Complete"}
+            {isSaving ? "Saving..." : "Save"}
+          </Button>
+          <Button 
+            onClick={handleComplete} 
+            disabled={isSaving || !appointment.medicalVisit} 
+            size="lg"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            Complete Consultation
           </Button>
         </div>
       </div>
+
+      {/* Patient Routing Information */}
+      {appointment.medicalVisit && (appointment.medicalVisit.prescriptions?.length > 0 || appointment.medicalVisit.labOrders?.length > 0) && (
+        <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-blue-100 dark:bg-blue-900 p-2">
+                <ClipboardList className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Patient Next Steps</h3>
+                <div className="space-y-2 text-sm">
+                  {appointment.medicalVisit.prescriptions && appointment.medicalVisit.prescriptions.length > 0 && (
+                    <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                      <Pill className="h-4 w-4" />
+                      <span>Patient should go to <strong>Pharmacy</strong> to collect {appointment.medicalVisit.prescriptions.length} prescription(s)</span>
+                    </div>
+                  )}
+                  {appointment.medicalVisit.labOrders && appointment.medicalVisit.labOrders.length > 0 && (
+                    <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                      <FlaskConical className="h-4 w-4" />
+                      <span>Patient should go to <strong>Laboratory</strong> for {appointment.medicalVisit.labOrders.length} lab test(s)</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                    <Receipt className="h-4 w-4" />
+                    <span>Patient should proceed to <strong>Billing</strong> for payment</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1">

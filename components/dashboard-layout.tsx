@@ -6,7 +6,7 @@ import { useState } from "react"
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Calendar, LayoutDashboard, Menu, Users, X, ClipboardList, Pill, FlaskConical, Receipt } from "lucide-react"
+import { BarChart3, Calendar, LayoutDashboard, Menu, Users, X, ClipboardList, Pill, FlaskConical, Receipt, ChevronDown, ChevronRight } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -40,8 +40,17 @@ const navigation = [
   },
   {
     name: "Pharmacy",
-    href: "/dashboard/pharmacy",
     icon: Pill,
+    submenu: [
+      {
+        name: "Prescriptions",
+        href: "/dashboard/pharmacy/prescriptions",
+      },
+      {
+        name: "Inventory",
+        href: "/dashboard/pharmacy",
+      },
+    ],
   },
   {
     name: "Laboratory",
@@ -68,6 +77,16 @@ const navigation = [
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+    Pharmacy: true, // Expand pharmacy by default
+  })
+
+  const toggleMenu = (name: string) => {
+    setExpandedMenus(prev => ({
+      ...prev,
+      [name]: !prev[name],
+    }))
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -93,17 +112,53 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <aside className="hidden w-64 border-r bg-muted/40 md:block">
           <nav className="grid gap-2 p-4 text-sm">
             {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
-                  pathname === item.href && "bg-muted font-medium text-foreground",
+              <div key={item.name}>
+                {item.submenu ? (
+                  <>
+                    <button
+                      onClick={() => toggleMenu(item.name)}
+                      className="flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon className="h-4 w-4" />
+                        {item.name}
+                      </div>
+                      {expandedMenus[item.name] ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </button>
+                    {expandedMenus[item.name] && (
+                      <div className="ml-7 mt-1 space-y-1">
+                        {item.submenu.map((subitem) => (
+                          <Link
+                            key={subitem.href}
+                            href={subitem.href}
+                            className={cn(
+                              "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
+                              pathname === subitem.href && "bg-muted font-medium text-foreground",
+                            )}
+                          >
+                            {subitem.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={item.href!}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
+                      pathname === item.href && "bg-muted font-medium text-foreground",
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.name}
+                  </Link>
                 )}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.name}
-              </Link>
+              </div>
             ))}
           </nav>
         </aside>
@@ -123,18 +178,55 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
             <nav className="grid gap-2 p-4 text-sm">
               {navigation.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
-                    pathname === item.href && "bg-muted font-medium text-foreground",
+                <div key={item.name}>
+                  {item.submenu ? (
+                    <>
+                      <button
+                        onClick={() => toggleMenu(item.name)}
+                        className="flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <div className="flex items-center gap-3">
+                          <item.icon className="h-4 w-4" />
+                          {item.name}
+                        </div>
+                        {expandedMenus[item.name] ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </button>
+                      {expandedMenus[item.name] && (
+                        <div className="ml-7 mt-1 space-y-1">
+                          {item.submenu.map((subitem) => (
+                            <Link
+                              key={subitem.href}
+                              href={subitem.href}
+                              className={cn(
+                                "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
+                                pathname === subitem.href && "bg-muted font-medium text-foreground",
+                              )}
+                              onClick={() => setOpen(false)}
+                            >
+                              {subitem.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <Link
+                      href={item.href!}
+                      className={cn(
+                        "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
+                        pathname === item.href && "bg-muted font-medium text-foreground",
+                      )}
+                      onClick={() => setOpen(false)}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.name}
+                    </Link>
                   )}
-                  onClick={() => setOpen(false)}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.name}
-                </Link>
+                </div>
               ))}
             </nav>
           </SheetContent>
