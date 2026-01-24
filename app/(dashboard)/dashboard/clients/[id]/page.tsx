@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ArrowLeft, Activity, Calendar, FileText, Plus } from "lucide-react";
@@ -37,20 +37,21 @@ type Client = {
   createdAt: string;
 };
 
-export default function ClientDetailsPage({ params }: { params: { id: string } }) {
+export default function ClientDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { id } = use(params);
   const [client, setClient] = useState<Client | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [vitalsDialogOpen, setVitalsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchClient();
-  }, [params.id]);
+  }, [id]);
 
   const fetchClient = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/clients/${params.id}`);
+      const response = await fetch(`/api/clients/${id}`);
       if (response.ok) {
         const data = await response.json();
         setClient(data);
